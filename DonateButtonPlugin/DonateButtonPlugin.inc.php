@@ -13,8 +13,9 @@ class DonateButtonPlugin extends GenericPlugin
     public function register($category, $path, $mainContextId = NULL)
     {
         if (parent::register($category, $path, $mainContextId)) {
-            if ($this->getEnabled()) {
+            if ($this->getEnabled($mainContextId)) {
                 HookRegistry::register('Templates::Article::Main', array($this, 'addButton'));
+                HookRegistry::register('TemplateManager::display', array($this, 'checkURL'));
                 $this->modifyDatabase();
             }
             return true;
@@ -100,4 +101,24 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
+    public function checkURL($hookName, $args)
+    {
+        $request = Application::get()->getRequest();
+        $currentUrl = $request->url();
+        $templateMgr = TemplateManager::getManager($request);
+
+        if (strpos($currentUrl, '/submission/wizard') !== false) {
+            // Add the script file using TemplateManager
+            $templateMgr->addJavaScript(
+                'helloWorld',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/showAgreement.js?v='.time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
+        } else {
+            error_log('Current URL does not contain "/submission/wizard".');
+        }
+    }
 }
