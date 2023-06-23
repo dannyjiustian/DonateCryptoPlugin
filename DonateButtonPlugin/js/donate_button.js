@@ -70,10 +70,36 @@ document.addEventListener("DOMContentLoaded", function () {
       const signer = provider.getSigner();
 
       //get targetContractAddress from db but now it's static not dynamic
-      const targetContractAddress =
-        "0x4D43B400eF65Cc48Ef68895b73239d6b981a56B3";
+      const targetContractAddress = [
+        {
+          address: "0x4D43B400eF65Cc48Ef68895b73239d6b981a56B3",
+        },
+        {
+          address: "0x4F308f137Bf030a016c4C903A119844b0E5B2F86",
+        },
+        {
+          address: "0x7e37355904356EfE4172cBd4df6cf0BF1f92C24E"
+        }
+      ];
+
+      const contract_1 = new ethers.Contract(
+        targetContractAddress[0].address,
+        contractAbi,
+        signer
+      );
+      const contract_2 = new ethers.Contract(
+        targetContractAddress[1].address,
+        contractAbi,
+        signer
+      );
+      const contract_3 = new ethers.Contract(
+        targetContractAddress[2].address,
+        contractAbi,
+        signer
+      );
 
       try {
+        // get all element snap
         const donateSnap = document.querySelector("#donate-snap");
         const closeDonateSnap = document.querySelector("#closeDonate");
         const addressWallet = document.querySelector("#address-crypto");
@@ -90,8 +116,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const donateProcess = async () => {
           if (donationAmount.value !== null && donationAmount.value !== "") {
-            const amount = ethers.utils.parseEther(donationAmount.value);
-            const balance = await provider.getBalance(address);
+            const amount = parseFloat(ethers.utils.parseEther(donationAmount.value));
+            const balance = await provider.getBalance(await getUserAddress());
             const balanceInEth = ethers.utils.formatEther(balance);
             if (parseFloat(donationAmount) > parseFloat(balanceInEth)) {
               createToast(
@@ -102,26 +128,40 @@ document.addEventListener("DOMContentLoaded", function () {
               );
               return;
             }
+            // split amount 
+            const amount_1 = amount * 0.3; // 30% for people 1
+            const amount_2 = amount * 0.1; // 10% for people 2
+            const amount_3 = amount * 0.6; // 60% for people 3
+
             createToast("loading");
-            const overrides = {
-              value: amount,
+            const overrides_1 = {
+              value: amount_1,
             };
-            await contract.donate(overrides).then((e) => {
-              console.log(e);
-              iziToast.destroy();
-              body.classList.remove("overflow-hidden");
-              donateSnap.classList.add("invisible", "opacity-0");
-              donateSnap.classList.remove("visible", "opacity-100");
-              connectWallet.removeEventListener("click", checkWallet);
-              sendNow.removeEventListener("click", donateProcess);
-              donationAmount.value = "";
-              donationMessage.value = "";
-              createToast(
-                "success",
-                "Success",
-                "Donation successful!",
-                "#00b09b"
-              );
+            const overrides_2 = {
+              value: amount_2,
+            };
+            const overrides_3 = {
+              value: amount_3,
+            };
+            await contract_1.donate(overrides_1).then(async () => {
+              await contract_2.donate(overrides_2).then(async () => {
+                await contract_3.donate(overrides_3).then(() => {
+                  iziToast.destroy();
+                  body.classList.remove("overflow-hidden");
+                  donateSnap.classList.add("invisible", "opacity-0");
+                  donateSnap.classList.remove("visible", "opacity-100");
+                  connectWallet.removeEventListener("click", checkWallet);
+                  sendNow.removeEventListener("click", donateProcess);
+                  donationAmount.value = "";
+                  donationMessage.value = "";
+                  createToast(
+                    "success",
+                    "Success",
+                    "Donation successful!",
+                    "#00b09b"
+                  );
+                })
+              })
             });
             return;
           } else {
@@ -141,11 +181,11 @@ document.addEventListener("DOMContentLoaded", function () {
           connectWallet.classList.add("invisible");
           addressWallet.innerHTML = sliceAddress(address);
           sendNow.disabled = false;
-  
+
           if (address !== null) {
             sendNow.addEventListener("click", donateProcess);
           }
-        }
+        };
 
         const checkWallet = async () => {
           await window.ethereum
@@ -184,12 +224,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (accounts.length === 0) {
           connectWallet.addEventListener("click", checkWallet);
         }
-
-        const contract = new ethers.Contract(
-          targetContractAddress,
-          contractAbi,
-          signer
-        );
 
         if (addressWallet.innerHTML !== "Not Connect" || accounts.length > 0) {
           process();
