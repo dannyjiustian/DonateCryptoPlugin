@@ -37,19 +37,26 @@ Examples your use **XAMPP/MAMP**, go to the htdocs/[ojs-folder-name] folder.
 After installing the plugin, don't forget to enabled the plugin, follow the steps below to enabled the plugin.
 
 - Log in to the OJS system and login with the administrator level.
-    ![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/6a5e651d-b4b4-453e-b154-056f0a7678eb)
 
 - Once logged in, go to your profile and click on the **Dashboard** menu.
-    ![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/c5b84267-155d-4b39-9436-7f3c11a74673)
 
 - And then go to menu **Website > Plugins**.
-    ![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/01d95d23-c2aa-44d0-84e9-b88704df854c)
 
 - In Installed Plugins, search for the plugin name **"Donation Button Plugin "** and check the checkbox for activated plugins.
-    ![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+  
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/f3f3961a-4871-49bd-9688-b32e7312ce43)
 
 - After enabled the plugin you can see the Donate Button in Journal Page.
-    ![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/315f629c-2cc8-479b-91bf-a9eb9128f391)
+  
+    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/d4e992ac-5013-4103-a219-9aaee409d327)
 
 
 
