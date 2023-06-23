@@ -1,15 +1,16 @@
 <?php
 
-import('lib.pkp.classes.plugins.GenericPlugin');
-import('lib.pkp.classes.db.DBResultRange');
-import('classes.core.Services');
-
 use Illuminate\Database\Capsule\Manager as Capsule;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Response;
 
+import('lib.pkp.classes.plugins.GenericPlugin');
 class DonateButtonPlugin extends GenericPlugin
 {
+    public function __construct()
+    {
+        import('lib.pkp.classes.db.DBResultRange');
+        import('classes.core.Services');
+    }
+
     public function register($category, $path, $mainContextId = NULL)
     {
         if (parent::register($category, $path, $mainContextId)) {
@@ -22,6 +23,7 @@ class DonateButtonPlugin extends GenericPlugin
         }
         return false;
     }
+
 
 
     public function getDisplayName()
@@ -60,21 +62,53 @@ class DonateButtonPlugin extends GenericPlugin
             $newFields = array(
                 array(
                     'tableName' => 'publications',
-                    'fieldName' => 'metamask_address'
+                    'fieldName' => 'wallet_address_author',
+                    'type'=> 'string'
                 ),
                 array(
                     'tableName' => 'publications',
-                    'fieldName' => 'contract_address'
+                    'fieldName' => 'wallet_address_reviewer',
+                    'type'=> 'string'
+                ),
+                array(
+                    'tableName' => 'publications',
+                    'fieldName' => 'wallet_address_publisher',
+                    'type'=> 'string'
+                ),
+                array(
+                    'tableName' => 'publications',
+                    'fieldName' => 'author_agreement',
+                    'type'=> 'boolean'
+                ),
+                array(
+                    'tableName' => 'publications',
+                    'fieldName' => 'reviewer_agreement',
+                    'type'=> 'boolean'
+                ),
+                array(
+                    'tableName' => 'publications',
+                    'fieldName' => 'publisher_agreement',
+                    'type'=> 'boolean'
+                ),
+                array(
+                    'tableName' => 'publications',
+                    'fieldName' => 'contract_address',
+                    'type'=> 'string'
                 ),
             );
 
             foreach ($newFields as $field) {
                 $tableName = $field['tableName'];
                 $fieldName = $field['fieldName'];
+                $type = $field['type'];
 
                 if ($this->checkColumnInDB($tableName, $fieldName)) {
-                    $schema->table($tableName, function ($table) use ($fieldName) {
-                        $table->string($fieldName)->nullable();
+                    $schema->table($tableName, function ($table) use ($fieldName, $type) {
+                        if($type === 'string'){
+                            $table->string($fieldName)->nullable();
+                        }else if($type === 'boolean'){
+                            $table->boolean($fieldName)->default(false)->nullable();
+                        }
                     });
                 }
             }
@@ -108,10 +142,30 @@ class DonateButtonPlugin extends GenericPlugin
         $templateMgr = TemplateManager::getManager($request);
 
         if (strpos($currentUrl, '/submission/wizard') !== false) {
-            // Add the script file using TemplateManager
+
+            // Javascript
             $templateMgr->addJavaScript(
-                'helloWorld',
-                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/showAgreement.js?v='.time(),
+                'showAgreementScript',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/showAgreement.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
+
+            $templateMgr->addJavaScript(
+                'etherjs',
+                "https://cdn.ethers.io/lib/ethers-5.4.umd.min.js",
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
+
+            //CSS
+            $templateMgr->addStyleSheet(
+                'showAgreementCSS',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/submission.css?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
                     'contexts' => 'backend'
