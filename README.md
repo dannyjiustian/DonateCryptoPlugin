@@ -3,7 +3,7 @@
 
 This plugin has a function to donate Ethereum crypto in the OJS system, this plugin will split the amount from the sender to 3 recipients **(publisher, reviewer, and author)** and then this plugin needs to be installed in the OJS system, following the steps below for installation.
 
-NB: This plugin is under development
+**NB: This plugin is under development**
 
 
 ## Installation
