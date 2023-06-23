@@ -146,7 +146,7 @@ class DonateButtonPlugin extends GenericPlugin
             // Javascript
             $templateMgr->addJavaScript(
                 'showAgreementScript',
-                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/showAgreement.js?v=' . time(),
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/submission_agreement.js?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
                     'contexts' => 'backend'
