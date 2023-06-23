@@ -9,7 +9,7 @@
 {/literal}
 
 <section class="item">
-    <div class="root"></div>
+    <div class="root" id="root"></div>
     <button class="metamask-donate" id="metamask-donate-button">
         Donate with Crypto
     </button>
