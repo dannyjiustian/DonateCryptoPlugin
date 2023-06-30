@@ -1,6 +1,17 @@
 <?php
   try {
-    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+      $postData = file_get_contents('php://input');
+      $postData = json_decode($postData, true);
+      if ($postData !== null) {
+        // add to database
+        $response = $postData;
+      } else {
+        $response['status'] = false;
+        $response['message'] = "No data is sent to this method!";
+        http_response_code(500);
+      }
+    } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
       $type = $_GET['type'];
       if (isset($type) && $type === "createSmartContract") {
         $url = 'http://localhost:3000/createSmartContract';
