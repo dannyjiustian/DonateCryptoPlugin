@@ -17,11 +17,9 @@
 
             $submissionId = $postData['submissionId'];
             $agreement = $postData['agreement'];
-            $wallet_address = $postData['wallet_address'];
 
-            $query = "UPDATE publications SET wallet_address_author = :walletAddress, author_agreement = :authorAgreement WHERE submission_id = :submissionId";
+            $query = "UPDATE publications SET author_agreement = :authorAgreement WHERE submission_id = :submissionId";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $wallet_address);
             $statement->bindParam(':authorAgreement', $agreement);
             $statement->bindParam(':submissionId', $submissionId);
             $exec = $statement->execute();
