@@ -209,10 +209,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 let res = {
                   from: args[0],
                   receiver: args[1],
-                  amount: parseInt(args[2].hex) / 10 ** 18,
+                  amount: parseInt(args[2]._hex) / 10 ** 18,
                   message: args[3],
                   timestamps: new Date(
-                    parseInt(args[4].hex) * 1000
+                    parseInt(args[4]._hex) * 1000
                   ).toLocaleString(),
                 };
                 dataTransfer.push(res);
@@ -226,6 +226,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 status: `${response.status}`,
                 dataTransfer,
               };
+
+              fetch(
+                "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(sendRes),
+                }
+              ).then((response) => console.log(response));
 
               // Destroy the loading toast and reset the form
               iziToast.destroy();
