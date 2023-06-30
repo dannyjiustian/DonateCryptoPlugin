@@ -16,7 +16,8 @@ class DonateButtonPlugin extends GenericPlugin
         if (parent::register($category, $path, $mainContextId)) {
             if ($this->getEnabled($mainContextId)) {
                 HookRegistry::register('Templates::Article::Main', array($this, 'addButton'));
-                HookRegistry::register('TemplateManager::display', array($this, 'checkURL'));
+                HookRegistry::register('TemplateManager::display', array($this, 'checkAuthorURL'));
+                HookRegistry::register('TemplateManager::display', array($this, 'checkReviewURL'));
                 $this->modifyDatabase();
             }
             return true;
@@ -60,40 +61,45 @@ class DonateButtonPlugin extends GenericPlugin
             $schema = Capsule::schema();
 
             $newFields = array(
-                array(
-                    'tableName' => 'publications',
-                    'fieldName' => 'wallet_address_author',
-                    'type'=> 'string'
-                ),
-                array(
-                    'tableName' => 'publications',
-                    'fieldName' => 'wallet_address_reviewer',
-                    'type'=> 'string'
-                ),
-                array(
-                    'tableName' => 'publications',
-                    'fieldName' => 'wallet_address_publisher',
-                    'type'=> 'string'
-                ),
+                // array(
+                //     'tableName' => 'publications',
+                //     'fieldName' => 'wallet_address_author',
+                //     'type' => 'string'
+                // ),
+                // array(
+                //     'tableName' => 'publications',
+                //     'fieldName' => 'wallet_address_reviewer',
+                //     'type' => 'string'
+                // ),
+                // array(
+                //     'tableName' => 'publications',
+                //     'fieldName' => 'wallet_address_publisher',
+                //     'type' => 'string'
+                // ),
                 array(
                     'tableName' => 'publications',
                     'fieldName' => 'author_agreement',
-                    'type'=> 'boolean'
+                    'type' => 'boolean'
                 ),
                 array(
                     'tableName' => 'publications',
                     'fieldName' => 'reviewer_agreement',
-                    'type'=> 'boolean'
+                    'type' => 'boolean'
                 ),
                 array(
                     'tableName' => 'publications',
                     'fieldName' => 'publisher_agreement',
-                    'type'=> 'boolean'
+                    'type' => 'boolean'
                 ),
                 array(
                     'tableName' => 'publications',
                     'fieldName' => 'contract_address',
-                    'type'=> 'string'
+                    'type' => 'string'
+                ),
+                array(
+                    'tableName' => 'authors',
+                    'fieldName' => 'crypto_wallet_address',
+                    'type' => 'string'
                 ),
             );
 
@@ -104,9 +110,9 @@ class DonateButtonPlugin extends GenericPlugin
 
                 if ($this->checkColumnInDB($tableName, $fieldName)) {
                     $schema->table($tableName, function ($table) use ($fieldName, $type) {
-                        if($type === 'string'){
+                        if ($type === 'string') {
                             $table->string($fieldName)->nullable();
-                        }else if($type === 'boolean'){
+                        } else if ($type === 'boolean') {
                             $table->boolean($fieldName)->default(false)->nullable();
                         }
                     });
@@ -135,7 +141,7 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
-    public function checkURL($hookName, $args)
+    public function checkAuthorURL($hookName, $args)
     {
         $request = Application::get()->getRequest();
         $currentUrl = $request->url();
@@ -152,7 +158,14 @@ class DonateButtonPlugin extends GenericPlugin
                     'contexts' => 'backend'
                 )
             );
-
+            $templateMgr->addJavaScript(
+                'addWalletScript',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/add_wallet.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
             $templateMgr->addJavaScript(
                 'etherjs',
                 "https://cdn.ethers.io/lib/ethers-5.4.umd.min.js",
@@ -161,7 +174,22 @@ class DonateButtonPlugin extends GenericPlugin
                     'contexts' => 'backend'
                 )
             );
-
+            $templateMgr->addJavaScript(
+                'iziToastjs',
+                "https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js",
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
+            $templateMgr->addJavaScript(
+                'Sweel_alert_2',
+                "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js",
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
             //CSS
             $templateMgr->addStyleSheet(
                 'showAgreementCSS',
@@ -171,8 +199,48 @@ class DonateButtonPlugin extends GenericPlugin
                     'contexts' => 'backend'
                 )
             );
+            $templateMgr->addStyleSheet(
+                'etherjs',
+                "https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css",
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
+            $templateMgr->addStyleSheet(
+                'SweetAlertCss',
+                "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css",
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend'
+                )
+            );
         } else {
             error_log('Current URL does not contain "/submission/wizard".');
+        }
+    }
+
+    public function checkReviewURL($hookName, $args)
+    {
+        $request = Application::get()->getRequest();
+        $url = $request->getCompleteUrl();
+        $templateMgr = TemplateManager::getManager($request);
+
+        $pattern = '/\/workflow\/index\/(\d+)\/(\d+)/';
+
+        // if (preg_match_all($pattern, $url, $matches)) {
+        if (strpos($url, '/reviewer/submission') !== false) {
+            // Javascript
+            $templateMgr->addJavaScript(
+                'reviewAgreementScript',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/review_agreement.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => 'backend',
+                )
+            );
+        } else {
+            error_log("URL does not match the pattern.");
         }
     }
 }
