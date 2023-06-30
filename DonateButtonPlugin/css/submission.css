@@ -1,9 +1,9 @@
-.dp-span{
+.dp-span {
     font-weight: bold;
     margin-left: 10px;
 }
 
-.hidden{
+.hidden {
     display: none;
 }
 
@@ -16,11 +16,11 @@
     margin-top: 10px;
 }
 
-.wallet-address-input:focus{
+.wallet-address-input:focus {
     outline: none;
 }
 
-input.wallet-address-input{
+input.wallet-address-input {
     width: 500px !important;
     padding: 10px 10px !important;
 }
@@ -29,6 +29,18 @@ input.wallet-address-input{
     margin-top: 20px;
 }
 
-.example{
+.example {
     margin-top: 5px;
+}
+
+.dp-error {
+    color: #d00a6c;
+    margin-top: 20px;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#modal{
+    margin-top: 40px;
 }
