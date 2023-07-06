@@ -3,9 +3,32 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentActiveTab = { value: 0 };
         let publications = [];
         const submissionId = getUrlParameter('submissionId');
-
+        let agreed = false;
+        const url = window.location.href;
+        let authorWalletList = [];
 
         // ------------------------ FUNCTIONS ---------------------------
+        function getServerFromUrl(url) {
+            var parser = document.createElement('a');
+            parser.href = url;
+            var protocol = parser.protocol;
+            var server = parser.hostname;
+            var result = protocol + '//' + server;
+            return result;
+        }
+
+        function getUrlBeforeIndexPhp(url) {
+            var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+            var matches = url.match(regex);
+            if (matches && matches.length > 1) {
+                return matches[1];
+            }
+            return url;
+        }
+
+        var server = getServerFromUrl(url);
+        var path = getUrlBeforeIndexPhp(url);
+
         function getActiveTab() {
             var listItems = $("ul.ui-tabs-nav li");
 
@@ -18,19 +41,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function getPublications(submissionId) {
-            fetch('/ojs/plugins/generic/DonateButtonPlugin/request/publications.php?submissionId=' + submissionId)
+            fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/publications.php?submissionId=' + submissionId)
                 .then(response => response.json())
                 .then(data => {
                     publications = data.data[0]
-                    console.log(publications);
+                    // console.log(publications);
                 })
                 .catch(error => {
                     console.log(error);
                 });
         }
 
-        function postDataExample(agree, wallet, submissionId) {
-            fetch('/ojs/plugins/generic/DonateButtonPlugin/request/publications.php', {
+        function updateAgreement(agree, submissionId) {
+            fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/publications.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -38,40 +61,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({
                     submissionId: submissionId,
                     agreement: agree,
-                    wallet_address: wallet,
                 })
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data);
+                    // console.log(data);
                 })
                 .catch(error => {
                     console.log(error);
                 });
         }
 
-        async function getMetamaskAddress() {
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    // Request access to the user's MetaMask accounts
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-                    if (accounts.length > 0) {
-                        return accounts[0];
-                    } else {
-                        throw new Error('No accounts found in MetaMask.');
+        function checkAuthorWallet() {
+            fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/check_wallet.php?publication_id=' + submissionId)
+                .then(response => response.json())
+                .then(data => {
+                    let author_data = data.data;
+                    if (author_data.length > 0) {
+                        author_data.forEach(author => {
+                            authorWalletList.push(author.crypto_wallet_address);
+                        });
                     }
-                } catch (error) {
-                    throw new Error('Error requesting MetaMask accounts: ' + error.message);
-                }
-            } else {
-                throw new Error('MetaMask not detected. Please make sure MetaMask is installed and connected.');
-            }
+                    // console.log(publications);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
         }
-
-
-
-        // -------------------------------------------------------------------
 
         //Watch value changes
         function watchCurrentActiveTab(callback) {
@@ -89,13 +105,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
         }
+        // -------------------------------------------------------------------
 
+        //fetch publications by submission id
         getPublications(submissionId);
 
         //If value changes to 3 or enter Confirmation Page
         watchCurrentActiveTab(updatedValue => {
             if (updatedValue == 3) {
-                let agree = false;
+                // checkAuthorWallet();
                 //Get submissionId from URL parameter
                 console.log("Confirmation Page")
                 // let form = $("form#submitStep4Form");
@@ -110,97 +128,103 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 let label = $('<span>').attr({
                     'for': 'flagAgreementCheckbox', 'class': 'dp-span'
-                }).text('Do you want this article to be able to accept donations later?');
+                }).text('Enable monetization in articles');
 
                 flagAgreement.append(checkbox, label);
 
-                // wallet address container
-                let walletAddress = $("<div>").attr({
-                    "id": "wallet-address", "class": "dp-wallet-address hidden"
+                paragraph.after(flagAgreement)
+
+                checkbox.on('click', function () {
+                    showModal()
+                    $(this).prop('checked', false)
                 });
 
-                //label for wallet address
-                let walletAddressLabel = $("<label>").attr({
-                    'for': 'walletAddress', 'class': 'dp-label'
-                }).text('Wallet Address');
+                function showModal() {
+                    $.get(server + path + '/plugins/generic/DonateButtonPlugin/templates/modal.tpl', function (data) {
+                        var modalContent = $(data);
+                        Swal.fire({
+                            html: modalContent,
+                            allowOutsideClick: false,
+                            width: '50%',
+                            confirmButtonText: "Confirm",
+                            confirmButtonColor: "#006798",
+                            didOpen: function () {
+                                var agreeCheckbox = document.getElementById('agree-checkbox');
+                                agreeCheckbox.checked = agreed;
+                                agreeCheckbox.addEventListener('change', function () {
+                                    var agree = agreeCheckbox.checked;
+                                    if (agree) {
+                                        agreed = true;
+                                    } else {
+                                        agreed = false;
+                                    }
 
-                //input type for wallet address
-                let walletAddressInput = $('<input>').attr({
-                    type: 'text',
-                    id: 'walletAddress',
-                    class: 'wallet-address-input',
-                    'required': true
-                });
+                                });
 
-                //example of the wallet address
-                let example = $("<div class='example'>Example : 0x12345678910123456ABCDEF</div>")
-
-                //wallet button
-                let walletButton = $('<button>').attr({
-                    "id": "wallet-button",
-                    "type": "button",
-                    "class":"pkp_button"
-                }).text("Get Wallet Address");
-
-                walletAddress.append(walletAddressLabel, walletAddressInput, example, walletButton);
-
-                walletButton.click(function () {
-                    getMetamaskAddress()
-                        .then((address) => {
-                            walletAddressInput.val(address);
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // console.log(agreed)
+                                if (agreed) {
+                                    checkbox.prop('checked', true);
+                                } else {
+                                    checkbox.prop('checked', false);
+                                }
+                            }
                         })
-                        .catch((error) => {
-                            console.error('Error:', error.message);
-                        });
-
-                })
-
-
-                paragraph.after(flagAgreement, walletAddress)
-
-                checkbox.on('change', function () {
-                    if ($(this).is(':checked')) {
-                        walletAddress.removeClass('hidden');
-                        agree = true;
-                    } else {
-                        walletAddress.addClass('hidden');
-                        agree = false;
-                    }
-                });
+                    })
+                }
 
                 if (publications) {
-                    console.log(publications.author_agreement);
+                    // console.log(publications.author_agreement);
                     if (publications.author_agreement == "1") {
                         checkbox.prop('checked', true);
                         if (checkbox.is(":checked")) {
-                            walletAddress.removeClass('hidden');
-                            agree = true;
-                            walletAddressInput.val(publications.wallet_address_author);
+                            agreed = true;
                         }
                     } else {
                         checkbox.prop('checked', false);
-                        walletAddress.addClass('hidden');
-                        agree = false;
+                        agreed = false;
                     }
                 }
 
                 function checkModalVisibility() {
                     if ($('body').hasClass('modal_is_visible')) {
+                        let check = false
+
+                        if (authorWalletList.includes(null) || authorWalletList.includes("")) {
+                            check = false
+                        } else {
+                            check = true
+                        }
+
                         let okButton = $("button.ok.pkpModalConfirmButton");
-                        okButton.click(() => {
-                            let walletValue = walletAddressInput.val();
 
-                            if (walletValue !== "") {
-                                postDataExample(agree, walletValue, submissionId)
+                        if (agreed) {
+                            if (check) {
+                                //Aktif
+                                okButton.prop('disabled', false);
+                            } else {
+                                //Tidak Aktif
+                                okButton.prop('disabled', true);
+                                $(".message").after(
+                                    '<div class="message dp-error">*There is incomplete author data. Check the data in Enter Metadata tab</div>'
+                                )
                             }
-                        });
 
+                        }
+
+                        okButton.click(() => {
+                            updateAgreement(agreed, submissionId);
+                        });
                     } else {
                         console.log('Modal is not appearing');
                     }
                 }
 
                 submitButton.click(() => {
+                    checkAuthorWallet();
+
                     setTimeout(checkModalVisibility, 100);
                 })
             }
