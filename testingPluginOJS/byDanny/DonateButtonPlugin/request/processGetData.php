@@ -41,20 +41,31 @@
         $response['status'] = true;
         $response['message'] = "Successfuly get abi data";
         $response['data'] = [
-          "address_contract" => "0x02D630bcFF66831cc54087E6F1aD7EBA18097390", // get from db
+          "address_contract" => "0xfd461D0E11E2AB6578B1fB0861792CCE8F5Dcc77", // get from db
           "abi_json_url" => "http://localhost:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json", // not change
-          "expired" => "2023-07-01T10:02:41+0000" // get from db
+          "expired" => "2023-07-10T10:02:41+0000" // get from db
         ];
-      } else if (isset($type) && $type === "getAddressDatabase") {
+      } else if (isset($type) && $type === "getDataDatabase") {
         $response['status'] = true;
-        $response['message'] = "Successfuly get abi data";
+        $response['message'] = "Successfuly get address data";
         $response['data'] = [
-          "publishers" => ["0x4D43B400eF65Cc48Ef68895b73239d6b981a56B3"],
-          "reviewers" => ["0x4F308f137Bf030a016c4C903A119844b0E5B2F86"],
+          "publishers" => [
+            "percentages" => 30,
+            "address" => ["0x4D43B400eF65Cc48Ef68895b73239d6b981a56B3"],
+          ],
+          "reviewers" => [
+            "percentages" => 10,
+            "address" => ["0x4F308f137Bf030a016c4C903A119844b0E5B2F86"],
+          ],
           "authors" => [
-            "0x7e37355904356EfE4172cBd4df6cf0BF1f92C24E",
-            "0x005d1822042698732F1B639C98B4cD269B403716",
-          ]
+            "percentages" => 60,
+            "address" => [
+              "0x7e37355904356EfE4172cBd4df6cf0BF1f92C24E",
+              "0x005d1822042698732F1B639C98B4cD269B403716",
+            ],
+          ],
+          "documentHash" => "a",
+          "doi" => "b"
         ];
       } else {
         $response['status'] = false;
