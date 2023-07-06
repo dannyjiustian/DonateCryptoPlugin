@@ -1,28 +1,51 @@
 // Define variables for contract ABI and contract address
-let contractABI, contractAddress, limits, address, expired;
+let contractABI,
+  contractAddress,
+  limits,
+  address = [],
+  percentages = [],
+  documentHash,
+  doi,
+  expired;
 
 // Function to fetch the ABI from a API Smart Contract
 const fetchAddress = async () => {
   try {
     const response = await fetch(
-      "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getAddressDatabase"
+      "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getDataDatabase"
     );
     const databaseData = await response.json();
 
     // Calculate limits based on the number of addresses in the database
     limits = [
       0,
-      databaseData.data.publishers.length,
-      databaseData.data.publishers.length,
-      databaseData.data.reviewers.length + databaseData.data.publishers.length,
-      databaseData.data.reviewers.length + databaseData.data.publishers.length,
-      databaseData.data.authors.length +
-        databaseData.data.reviewers.length +
-        databaseData.data.publishers.length,
+      databaseData.data.publishers.address.length,
+      databaseData.data.publishers.address.length,
+      databaseData.data.reviewers.address.length +
+        databaseData.data.publishers.address.length,
+      databaseData.data.reviewers.address.length +
+        databaseData.data.publishers.address.length,
+      databaseData.data.authors.address.length +
+        databaseData.data.reviewers.address.length +
+        databaseData.data.publishers.address.length,
     ];
 
     // Flatten the address data from the database
-    address = Object.values(databaseData.data).flat();
+    address = Object.values(databaseData.data)
+      .flat()
+      .flatMap((item) => item.address)
+      .filter((address) => address != null);
+
+    // Flatten the percentages data from the database
+    percentages = Object.values(databaseData.data)
+      .flat()
+      .flatMap((item) => item.percentages)
+      .filter((percentages) => percentages != null);
+
+    // Get document hash from the database
+    documentHash = databaseData.data.documentHash;
+    // Get doi from the database
+    doi = databaseData.data.doi;
   } catch (error) {
     console.log(`Error fetching Address: ${error}`);
   }
@@ -135,7 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
             contractABI,
             signer
           );
-
+          
+          // If need get all transaction in smart contract
           // const data = await transactionContract.getAllTransaction();
           // console.log(data);
 
@@ -189,6 +213,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 .addTransaction(
                   limits,
                   address,
+                  percentages,
+                  documentHash,
+                  doi,
                   donationMessage.value,
                   overrides
                 )
@@ -203,40 +230,43 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
               const response = await addTransactionProcess.wait();
 
-              const dataTransfer = [];
-              response.events.map((data) => {
-                const args = Object.values(data.args).flat();
-                let res = {
-                  from: args[0],
-                  receiver: args[1],
-                  amount: parseInt(args[2]._hex) / 10 ** 18,
-                  message: args[3],
-                  timestamps: new Date(
-                    parseInt(args[4]._hex) * 1000
-                  ).toLocaleString(),
-                };
-                dataTransfer.push(res);
-              });
+              // // If need send response from smart contract
+              // const dataTransfer = [];
+              // response.events.map((data) => {
+              //   const args = Object.values(data.args).flat();
+              //   let res = {
+              //     from: args[0],
+              //     receiver: args[1],
+              //     amount: parseInt(args[2]._hex) / 10 ** 18,
+              //     documentHash: args[3],
+              //     doi: args[4],
+              //     message: args[5],
+              //     timestamps: new Date(
+              //       parseInt(args[4]._hex) * 1000
+              //     ).toLocaleString(),
+              //   };
+              //   dataTransfer.push(res);
+              // });
 
-              // Send response to Database
-              const sendRes = {
-                contractAddress,
-                transactionHash: `${response.transactionHash}`,
-                block: `${response.blockNumber}`,
-                status: `${response.status}`,
-                dataTransfer,
-              };
+              // // Send response to Database
+              // const sendRes = {
+              //   contractAddress,
+              //   transactionHash: `${response.transactionHash}`,
+              //   block: `${response.blockNumber}`,
+              //   status: `${response.status}`,
+              //   dataTransfer,
+              // };
 
-              fetch(
-                "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(sendRes),
-                }
-              ).then((response) => console.log(response));
+              // fetch(
+              //   "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php",
+              //   {
+              //     method: "POST",
+              //     headers: {
+              //       "Content-Type": "application/json",
+              //     },
+              //     body: JSON.stringify(sendRes),
+              //   }
+              // ).then((response) => console.log(response));
 
               // Destroy the loading toast and reset the form
               iziToast.destroy();
