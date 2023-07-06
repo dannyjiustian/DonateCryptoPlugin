@@ -18,7 +18,14 @@ class DonateButtonPlugin extends GenericPlugin
                 HookRegistry::register('Templates::Article::Main', array($this, 'addButton'));
                 HookRegistry::register('TemplateManager::display', array($this, 'checkAuthorURL'));
                 HookRegistry::register('TemplateManager::display', array($this, 'checkReviewURL'));
+                // HookRegistry::register('LoadHandler', array($this, 'websiteSettings'));
                 $this->modifyDatabase();
+                $this->addSmartContractTable();
+                $this->addSubmissionTable();
+                $this->addAddressAuthorsTable();
+                $this->addAddressPublishersTable();
+                $this->addAddressReviewersTable();
+                // $this->dropCustomTable();
             }
             return true;
         }
@@ -101,6 +108,11 @@ class DonateButtonPlugin extends GenericPlugin
                     'fieldName' => 'crypto_wallet_address',
                     'type' => 'string'
                 ),
+                array(
+                    'tableName' => 'authors',
+                    'fieldName' => 'percentage',
+                    'type' => 'integer'
+                ),
             );
 
             foreach ($newFields as $field) {
@@ -114,6 +126,8 @@ class DonateButtonPlugin extends GenericPlugin
                             $table->string($fieldName)->nullable();
                         } else if ($type === 'boolean') {
                             $table->boolean($fieldName)->default(false)->nullable();
+                        } else if ($type === 'integer') {
+                            $table->integer($fieldName)->default(false)->nullable();
                         }
                     });
                 }
@@ -121,6 +135,132 @@ class DonateButtonPlugin extends GenericPlugin
         } catch (Exception $e) {
             throw new Exception('Database connection error: ' . $e->getMessage());
         }
+    }
+
+    private function addSmartContractTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('smart_contract')) {
+                $schema->create('smart_contract', function ($table) {
+                    $table->integer('id_submission')->primary();
+                    $table->string('smart_contract_address');
+                    $table->integer('percentages_publisher');
+                    $table->integer('percentages_reviewers');
+                    $table->integer('percentages_authors');
+                    $table->timestamp('expired')->nullable();
+                });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function addSubmissionTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('submission')) {
+                $schema->create('submission', function ($table) {
+                    $table->integer('id_submission')->primary();
+                    $table->string('network');
+                    $table->string('url_api_key');
+                    $table->string('private_key_account');
+                });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function addAddressPublishersTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('address_publishers')) {
+                $schema->create('address_publishers', function ($table) {
+                    $table->increments('id');
+                    $table->string('smart_contract_address');
+                    $table->string('wallet_address');
+                });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function addAddressAuthorsTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('address_authors')) {
+                $schema->create('address_authors', function ($table) {
+                    $table->increments('id');
+                    $table->string('smart_contract_address');
+                    $table->string('wallet_address');
+                });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+
+    private function addAddressReviewersTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('address_reviewers')) {
+                $schema->create('address_reviewers', function ($table) {
+                    $table->increments('id');
+                    $table->string('smart_contract_address');
+                    $table->string('wallet_address');
+                });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function dropCustomTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            if ($this->checkTableInDB('smart_contract')) {
+                $schema->dropIfExists('smart_contract');
+            }
+            if ($this->checkTableInDB('submission')) {
+                $schema->dropIfExists('submission');
+            }
+            if ($this->checkTableInDB('address_publishers')) {
+                $schema->dropIfExists('address_publishers');
+            }
+            if ($this->checkTableInDB('address_authors')) {
+                $schema->dropIfExists('address_authors');
+            }
+            if ($this->checkTableInDB('address_reviewers')) {
+                $schema->dropIfExists('address_reviewers');
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function checkTableInDB($tableName)
+    {
+        $schema = Capsule::schema();
+        return $schema->hasTable($tableName);
     }
 
     private function checkColumnInDB($tableName, $fieldName)
@@ -150,20 +290,23 @@ class DonateButtonPlugin extends GenericPlugin
         if (strpos($currentUrl, '/submission/wizard') !== false) {
 
             // Javascript
-            $templateMgr->addJavaScript(
-                'showAgreementScript',
-                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/submission_agreement.js?v=' . time(),
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
-                )
-            );
+            // $templateMgr->addJavaScript(
+            //     'showAgreementScript',
+            //     $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/submission_agreement.js?v=' . time(),
+            //     array(
+            //         'priority' => STYLE_SEQUENCE_LAST,
+            //         'contexts' => 'backend'
+            //     )
+            // );
             $templateMgr->addJavaScript(
                 'addWalletScript',
                 $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/add_wallet.js?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
+                    'contexts' => 'backend',
+                    'attributes' => array(
+                        'type' => 'module',
+                    ),
                 )
             );
             $templateMgr->addJavaScript(
@@ -243,4 +386,32 @@ class DonateButtonPlugin extends GenericPlugin
             error_log("URL does not match the pattern.");
         }
     }
+
+    // public function websiteSettings($hookName, $args)
+    // {
+    //     $request = Application::get()->getRequest();
+    //     $url = $request->getCompleteUrl();
+    //     $templateMgr = TemplateManager::getManager($request);
+
+    //     if (strpos($url, '/management/settings/website') !== false) {
+    //         // Javascript
+    //         $templateMgr->addJavaScript(
+    //             'websiteSettingsScript',
+    //             $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/website_setting.js?v=' . time(),
+    //             array(
+    //                 'priority' => STYLE_SEQUENCE_LAST,
+    //                 'contexts' => 'backend',
+    //             )
+    //         );
+
+    //         $templateMgr->addStyleSheet(
+    //             'websiteSettingsStylesheet',
+    //             $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/website_setting.css?v=' . time(),
+    //             array(
+    //                 'priority' => STYLE_SEQUENCE_LAST,
+    //                 'contexts' => 'backend'
+    //             )
+    //         );
+    //     }
+    // }
 }
