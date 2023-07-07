@@ -1,10 +1,14 @@
 <?php
+  require_once '../database/Database.inc.php';
+  error_reporting(0);
   try {
+    $db = new Database();
+    $pdo = $db->getConnection();
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       $postData = file_get_contents('php://input');
       $postData = json_decode($postData, true);
       if ($postData !== null) {
-        // add to database
+        // planning add to database
         $response = $postData;
       } else {
         $response['status'] = false;
@@ -14,59 +18,127 @@
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
       $type = $_GET['type'];
       if (isset($type) && $type === "createSmartContract") {
-        $url = 'http://localhost:3000/createSmartContract';
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $id_submission = $_GET['id_submission'];
         
-        $headers = [
-          "Content-Type: application/x-www-form-urlencoded"
-        ];
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        // Fetch submission data
+        $query = "SELECT * FROM submission WHERE id_submission = :id_submission";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute(['id_submission' => $id_submission]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // get from db
-        $network = "sepolia";
-        $url_api_key = "https://eth-sepolia.g.alchemy.com/v2/poW824z7baY51XHHw5_9oqfNZo7Mcnav";
-        $private_key_account = "dfa5e75b3dbcc8e3b928e5723dab7ce657c620cac73bd991dbd8268aaac55a18";
+        if ($row) {
+          $url = 'http://localhost:3000/createSmartContract';
+          $curl = curl_init($url);
+          curl_setopt($curl, CURLOPT_POST, true);
+          curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+          
+          $headers = [
+            "Content-Type: application/x-www-form-urlencoded"
+          ];
+          curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-        $data = "network=$network&url_api_key=$url_api_key&private_key_account=$private_key_account";
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        
-        $result = curl_exec($curl);
-        http_response_code($httpcode);
-        curl_close($curl);
-        $response = json_decode($result);
+          // get from db
+          $network = $row["network"];
+          $url_api_key = $row["url_api_key"];
+          $private_key_account = $row["private_key_account"];
+
+          $data = "network=$network&url_api_key=$url_api_key&private_key_account=$private_key_account";
+          curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+          $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+          
+          $result = curl_exec($curl);
+          http_response_code($httpcode);
+          curl_close($curl);
+          // address contract address will save/update into db
+          // json_decode($result)->data->address_contract
+          // example output "0x5030C1E1dFd9B964415869990bC8eE1b56A5E91C"
+          $response = json_decode($result);
+        } else {
+          $response['status'] = false;
+          $response['message'] = 'Failure to create smart contract';
+          $response['data'] = "id submission not found! ID: $id_submission";
+        }
       } else if (isset($type) && $type === "getABIDatabase") {
-        $response['status'] = true;
-        $response['message'] = "Successfuly get abi data";
-        $response['data'] = [
-          "address_contract" => "0xfd461D0E11E2AB6578B1fB0861792CCE8F5Dcc77", // get from db
-          "abi_json_url" => "http://localhost:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json", // not change
-          "expired" => "2023-07-10T10:02:41+0000" // get from db
-        ];
+        $id_submission = $_GET['id_submission'];
+        
+        // Fetch smart contract data
+        $query = "SELECT * FROM smart_contract WHERE id_submission = :id_submission";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute(['id_submission' => $id_submission]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+          $response['status'] = true;
+          $response['message'] = "Successfully get ABI data";
+          $response['data'] = [
+            "address_contract" => $row["smart_contract_address"],
+            "abi_json_url" => "http://localhost:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json",
+            "expired" => $row["expired"]
+          ];
+        } else {
+          $response['status'] = false;
+          $response['message'] = 'Failure to get ABI data';
+          $response['data'] = "id submission not found! ID: $id_submission";
+        }
       } else if (isset($type) && $type === "getDataDatabase") {
-        $response['status'] = true;
-        $response['message'] = "Successfuly get address data";
-        $response['data'] = [
-          "publishers" => [
-            "percentages" => 30,
-            "address" => ["0x4D43B400eF65Cc48Ef68895b73239d6b981a56B3"],
-          ],
-          "reviewers" => [
-            "percentages" => 10,
-            "address" => ["0x4F308f137Bf030a016c4C903A119844b0E5B2F86"],
-          ],
-          "authors" => [
-            "percentages" => 60,
-            "address" => [
-              "0x7e37355904356EfE4172cBd4df6cf0BF1f92C24E",
-              "0x005d1822042698732F1B639C98B4cD269B403716",
+        $id_submission = $_GET['id_submission'];
+
+        // Fetch smart contract data
+        $query = "SELECT * FROM smart_contract WHERE id_submission = :id_submission";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute(['id_submission' => $id_submission]);
+        $rowPercentages = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($rowPercentages) {
+          $smart_contract_address = $rowPercentages["smart_contract_address"];
+
+          // Fetch address publishers
+          $query = "SELECT wallet_address FROM address_publishers WHERE smart_contract_address LIKE :smart_contract_address";
+          $stmt = $pdo->prepare($query);
+          $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+          $addressPublishers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+          // Fetch address reviewers
+          $query = "SELECT wallet_address FROM address_reviewers WHERE smart_contract_address LIKE :smart_contract_address";
+          $stmt = $pdo->prepare($query);
+          $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+          $addressReviewers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+          // Fetch address authors
+          $query = "SELECT wallet_address FROM address_authors WHERE smart_contract_address LIKE :smart_contract_address";
+          $stmt = $pdo->prepare($query);
+          $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+          $addressAuthors = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+          // Fetch files data
+          $query = "SELECT * FROM files WHERE file_id = :file_id";
+          $stmt = $pdo->prepare($query);
+          $stmt->execute(['file_id' => $id_submission]);
+          $rowFiles = $stmt->fetch(PDO::FETCH_ASSOC);
+
+          $response['status'] = true;
+          $response['message'] = "Successfully get address data";
+          $response['data'] = [
+            "publishers" => [
+              "percentages" => $rowPercentages["percentages_publisher"],
+              "address" => $addressPublishers,
             ],
-          ],
-          "documentHash" => "a",
-          "doi" => "b"
-        ];
+            "reviewers" => [
+              "percentages" => $rowPercentages["percentages_reviewers"],
+              "address" => $addressReviewers,
+            ],
+            "authors" => [
+              "percentages" => $rowPercentages["percentages_authors"],
+              "address" => $addressAuthors,
+            ],
+            "documentHash" => basename($rowFiles["path"]),
+            "doi" => "b"
+          ];
+        } else {
+          $response['status'] = false;
+          $response['message'] = 'Failure to get ABI data';
+          $response['data'] = "id submission not found! ID: $id_submission";
+        }
       } else {
         $response['status'] = false;
         $response['message'] = "Invalid request params type.";
