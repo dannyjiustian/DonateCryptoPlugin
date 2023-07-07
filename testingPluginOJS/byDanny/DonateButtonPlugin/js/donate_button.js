@@ -12,7 +12,9 @@ let contractABI,
 const fetchAddress = async () => {
   try {
     const response = await fetch(
-      "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getDataDatabase"
+      `/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getDataDatabase&id_submission=${window.location.pathname
+        .split("/")
+        .pop()}`
     );
     const databaseData = await response.json();
 
@@ -55,7 +57,9 @@ const fetchAddress = async () => {
 const fetchABI = async () => {
   try {
     const response = await fetch(
-      "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getABIDatabase"
+      `/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getABIDatabase&id_submission=${window.location.pathname
+        .split("/")
+        .pop()}`
     );
     const data = await response.json();
     contractAddress = data.data.address_contract;
@@ -158,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
             contractABI,
             signer
           );
-          
+
           // If need get all transaction in smart contract
           // const data = await transactionContract.getAllTransaction();
           // console.log(data);
