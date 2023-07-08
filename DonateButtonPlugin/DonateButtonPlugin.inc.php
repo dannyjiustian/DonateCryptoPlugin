@@ -18,7 +18,7 @@ class DonateButtonPlugin extends GenericPlugin
                 HookRegistry::register('Templates::Article::Main', array($this, 'addButton'));
                 HookRegistry::register('TemplateManager::display', array($this, 'checkAuthorURL'));
                 HookRegistry::register('TemplateManager::display', array($this, 'checkReviewURL'));
-                // HookRegistry::register('LoadHandler', array($this, 'websiteSettings'));
+                HookRegistry::register('LoadHandler', array($this, 'websiteSettings'));
                 $this->modifyDatabase();
                 $this->addSmartContractTable();
                 $this->addSubmissionTable();
@@ -49,15 +49,88 @@ class DonateButtonPlugin extends GenericPlugin
         return $this->getEnabled();
     }
 
+    private function importJavascript($templateMgr, $request, $type)
+    {
+        $templateMgr->addJavaScript(
+            'etherjs',
+            "https://cdn.ethers.io/lib/ethers-5.4.umd.min.js",
+            array(
+                'priority' => STYLE_SEQUENCE_LAST,
+                'contexts' => [$type == 'backend' ? 'backend' : 'frontend']
+            )
+        );
+        $templateMgr->addJavaScript(
+            'iziToastjs',
+            "https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js",
+            array(
+                'priority' => STYLE_SEQUENCE_LAST,
+                'contexts' => [$type == 'backend' ? 'backend' : 'frontend']
+            )
+        );
+        $templateMgr->addJavaScript(
+            'Sweel_alert_2',
+            "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js",
+            array(
+                'priority' => STYLE_SEQUENCE_LAST,
+                'contexts' => [$type == 'backend' ? 'backend' : 'frontend']
+            )
+        );
+    }
+
+    private function importStylesheet($templateMgr, $request, $type)
+    {
+        $templateMgr->addStyleSheet(
+            'ethercss',
+            "https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css",
+            array(
+                'priority' => STYLE_SEQUENCE_LAST,
+                'contexts' => [$type == 'backend' ? 'backend' : 'frontend']
+            )
+        );
+        $templateMgr->addStyleSheet(
+            'SweetAlertCss',
+            "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css",
+            array(
+                'priority' => STYLE_SEQUENCE_LAST,
+                'contexts' => [$type == 'backend' ? 'backend' : 'frontend']
+            )
+        );
+    }
+
 
     public function addButton($hookName, $args)
     {
         $smarty = &$args[1];
         $output = &$args[2];
+        $request = Application::get()->getRequest();
+        $templateMgr = TemplateManager::getManager($request);
 
         $article = $smarty->getTemplateVars('article');
 
         if ($article && $article->getStatus() === STATUS_PUBLISHED) {
+
+            $templateMgr->addJavaScript(
+                'donate_button',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/donate_button.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['frontend'],
+                )
+            );
+            $templateMgr->addJavaScript(
+                'react_minified',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/index-5fa8768b.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['frontend'],
+                    'attributes' => array(
+                        'type' => 'module',
+                        'crossorigin' => true,
+                    ),
+                )
+            );
+            $this->importJavascript($templateMgr, $request, 'frontend');
+
             $output .= $smarty->fetch($this->getTemplateResource('donate_button.tpl'));
         }
     }
@@ -288,49 +361,16 @@ class DonateButtonPlugin extends GenericPlugin
         $templateMgr = TemplateManager::getManager($request);
 
         if (strpos($currentUrl, '/submission/wizard') !== false) {
-
-            // Javascript
-            // $templateMgr->addJavaScript(
-            //     'showAgreementScript',
-            //     $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/submission_agreement.js?v=' . time(),
-            //     array(
-            //         'priority' => STYLE_SEQUENCE_LAST,
-            //         'contexts' => 'backend'
-            //     )
-            // );
+            //Javascript
             $templateMgr->addJavaScript(
                 'addWalletScript',
                 $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/add_wallet.js?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend',
+                    'contexts' => ['backend'],
                     'attributes' => array(
                         'type' => 'module',
                     ),
-                )
-            );
-            $templateMgr->addJavaScript(
-                'etherjs',
-                "https://cdn.ethers.io/lib/ethers-5.4.umd.min.js",
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
-                )
-            );
-            $templateMgr->addJavaScript(
-                'iziToastjs',
-                "https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js",
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
-                )
-            );
-            $templateMgr->addJavaScript(
-                'Sweel_alert_2',
-                "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js",
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
                 )
             );
             //CSS
@@ -339,25 +379,11 @@ class DonateButtonPlugin extends GenericPlugin
                 $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/submission.css?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
+                    'contexts' => ['backend']
                 )
             );
-            $templateMgr->addStyleSheet(
-                'etherjs',
-                "https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css",
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
-                )
-            );
-            $templateMgr->addStyleSheet(
-                'SweetAlertCss',
-                "https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css",
-                array(
-                    'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend'
-                )
-            );
+            $this->importJavascript($templateMgr, $request, 'backend');
+            $this->importStylesheet($templateMgr, $request, 'backend');
         } else {
             error_log('Current URL does not contain "/submission/wizard".');
         }
@@ -379,7 +405,7 @@ class DonateButtonPlugin extends GenericPlugin
                 $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/review_agreement.js?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
-                    'contexts' => 'backend',
+                    'contexts' => ['backend'],
                 )
             );
         } else {
@@ -387,31 +413,33 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
-    // public function websiteSettings($hookName, $args)
-    // {
-    //     $request = Application::get()->getRequest();
-    //     $url = $request->getCompleteUrl();
-    //     $templateMgr = TemplateManager::getManager($request);
+    public function websiteSettings($hookName, $args)
+    {
+        $request = Application::get()->getRequest();
+        $url = $request->getCompleteUrl();
+        $templateMgr = TemplateManager::getManager($request);
 
-    //     if (strpos($url, '/management/settings/website') !== false) {
-    //         // Javascript
-    //         $templateMgr->addJavaScript(
-    //             'websiteSettingsScript',
-    //             $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/website_setting.js?v=' . time(),
-    //             array(
-    //                 'priority' => STYLE_SEQUENCE_LAST,
-    //                 'contexts' => 'backend',
-    //             )
-    //         );
+        if (strpos($url, '/management/settings/website') !== false) {
+            // Javascript
+            $templateMgr->addJavaScript(
+                'websiteSettingsScript',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/website_setting.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['backend'],
+                )
+            );
 
-    //         $templateMgr->addStyleSheet(
-    //             'websiteSettingsStylesheet',
-    //             $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/website_setting.css?v=' . time(),
-    //             array(
-    //                 'priority' => STYLE_SEQUENCE_LAST,
-    //                 'contexts' => 'backend'
-    //             )
-    //         );
-    //     }
-    // }
+            $templateMgr->addStyleSheet(
+                'websiteSettingsStylesheet',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/website_setting.css?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['backend']
+                )
+            );
+            $this->importJavascript($templateMgr, $request, 'backend');
+            $this->importStylesheet($templateMgr, $request, 'backend');
+        }
+    }
 }
