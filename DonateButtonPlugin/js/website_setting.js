@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', function () {
     $(document).ready(function () {
         let currentActiveTab = "";
         const url = window.location.href;
+        let percentage_settings = {
+            percentage_authors: 0,
+            percentage_reviewers: 0,
+            percentage_publisher: 0,
+        };
 
 
         // ------------------------ FUNCTIONS ---------------------------
@@ -26,7 +31,39 @@ document.addEventListener('DOMContentLoaded', function () {
         var server = getServerFromUrl(url);
         var path = getUrlBeforeIndexPhp(url);
 
-        // -------------------------------------------------------------------
+
+        async function getPercentageSettings() {
+            await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/percentage_settings.php')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    percentage_settings.percentage_authors = data.data[0].percentage_authors
+                    percentage_settings.percentage_reviewers = data.data[0].percentage_reviewers
+                    percentage_settings.percentage_publisher = data.data[0].percentage_publisher
+                    // console.log(publications);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        }
+
+        async function updatePercentageSettings() {
+            await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/percentage_settings.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(percentage_settings)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    // console.log(publications);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        }
 
         function getFragment() {
             var urlFragment = window.location.hash;
@@ -71,8 +108,37 @@ document.addEventListener('DOMContentLoaded', function () {
             $("#smartcontract").attr('hidden', 'hidden');
         }
 
+        function validateTotal() {
+            const percentageInputs = $('.percentage_field');
+            let error_field = $('.error_field');
+            error_field.empty();
+            // percentageInputs.on('input', validateTotal);
+
+            const total = Array.from(percentageInputs).reduce((sum, input) => sum + Number(input.value), 0);
+
+            if (total > 100) {
+                error_field.append("<p class='invalid sub_label'>*Cannot exceed 100 percent.</p>")
+                return false;
+            }
+
+            if (total < 100 && total != 0) {
+                error_field.append("<p class='invalid sub_label'>*Please divide the percent up to a total of 100.</p>")
+                return false;
+            }
+
+            if (total == 0) {
+                error_field.append("<p class='invalid sub_label'>*Percentage total cannot be 0.</p>")
+                return false;
+            }
+
+            return true;
+        }
+
+        // ------------------------------------------------------------------------------------------------
+
         watchCurrentFragment(value => {
             if (value == "#setup") {
+                getPercentageSettings();
                 defaultSetting();
 
                 $.get(server + path + '/plugins/generic/DonateButtonPlugin/templates/smart_contract_settings.tpl', function (data) {
@@ -163,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 })
 
-                $(document).on('click', "#settings", ()=>{
+                $(document).on('click', "#settings", () => {
                     $.get(server + path + '/plugins/generic/DonateButtonPlugin/templates/settings.tpl', function (data) {
                         var modalContent = $(data);
                         Swal.fire({
@@ -175,11 +241,30 @@ document.addEventListener('DOMContentLoaded', function () {
                             allowEscapeKey: false,
                             showCancelButton: true,
                             cancelButtonText: "Cancel",
+                            customClass: {
+                                confirmButton: "submit_button pkp_button",
+                                cancelButton: "cancel_button pkp_button",
+                            },
+                            preConfirm: () => {
+                                percentage_settings.percentage_authors = $("#authors_percentage").val()
+                                percentage_settings.percentage_reviewers = $("#reviewers_percentage").val()
+                                percentage_settings.percentage_publisher = $("#publishers_percentage").val()
+                                return validateTotal();
+                            },
+                            didOpen: () => {
+                                $("#authors_percentage").val(percentage_settings.percentage_authors)
+                                $("#reviewers_percentage").val(percentage_settings.percentage_reviewers)
+                                $("#publishers_percentage").val(percentage_settings.percentage_publisher)
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                updatePercentageSettings();
+                            }
                         })
                     })
                 })
 
-                $(document).on('click', "#add_reviewer", ()=>{
+                $(document).on('click', "#add_reviewer", () => {
                     console.log("Add reviewer clicked")
                 })
             } else {

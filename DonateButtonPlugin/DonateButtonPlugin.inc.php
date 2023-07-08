@@ -25,6 +25,7 @@ class DonateButtonPlugin extends GenericPlugin
                 $this->addAddressAuthorsTable();
                 $this->addAddressPublishersTable();
                 $this->addAddressReviewersTable();
+                $this->addPercentageSettingsTable();
                 // $this->dropCustomTable();
             }
             return true;
@@ -299,6 +300,33 @@ class DonateButtonPlugin extends GenericPlugin
                     $table->string('smart_contract_address');
                     $table->string('wallet_address');
                 });
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database connection error: ' . $e->getMessage());
+        }
+    }
+
+    private function addPercentageSettingsTable()
+    {
+        try {
+            $schema = Capsule::schema();
+
+            // Add a new table
+            if (!$this->checkTableInDB('percentage_settings')) {
+                $schema->create('percentage_settings', function ($table) {
+                    $table->increments('id');
+                    $table->integer('percentage_publisher');
+                    $table->integer('percentage_reviewers');
+                    $table->integer('percentage_authors');
+                });
+
+                // Insert data into the newly created table
+                $percentageSettingsData = [
+                    'percentage_publisher' => 0,
+                    'percentage_reviewers' => 0,
+                    'percentage_authors' => 0,
+                ];
+                $schema->getConnection()->table('percentage_settings')->insert($percentageSettingsData);
             }
         } catch (Exception $e) {
             throw new Exception('Database connection error: ' . $e->getMessage());

@@ -18,7 +18,8 @@
     width: 150px;
 }
 
-.publisher_wallet:focus {
+.publisher_wallet:focus,
+.percentage_field {
     outline: none;
 }
 
@@ -40,7 +41,88 @@ input.publisher_wallet {
     text-overflow: ellipsis;
 }
 
-.add_reviewer_section{
+.add_reviewer_section {
     display: flex;
     justify-content: flex-end;
 }
+
+.settings {
+    margin-top: 40px;
+}
+
+.settings .input_section {
+    display: grid;
+    gap: 20px;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+}
+
+.dp-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+input.percentage_field {
+    width: 100%;
+    padding: 10px 10px !important;
+    font-size: 16px !important;
+}
+
+input.percentage_field::-webkit-outer-spin-button,
+input.percentage_field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.submit_button {
+    width: 150px !important;
+    display: inline-block !important;
+    padding: 0 .5em !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 2px !important;
+    font-size: .875rem !important;
+    line-height: 2rem !important;
+    font-weight: 700 !important;
+    color: #006798 !important;
+    text-decoration: none !important;
+    box-shadow: 0 1px 0 #ddd !important;
+    cursor: pointer !important;
+}
+
+.cancel_button {
+    width: 150px !important;
+    display: inline-block !important;
+    padding: 0 .5em !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 2px !important;
+    font-size: .875rem !important;
+    line-height: 2rem !important;
+    font-weight: 700 !important;
+    color: #d00a6c !important;
+    text-decoration: none !important;
+    box-shadow: 0 1px 0 #ddd !important;
+    cursor: pointer !important;
+}
+
+.invalid {
+    color: #d00a6c !important;
+}
+
+.sub_label {
+    font-size: .875rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    color: #777;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+
+
+
+/* #settings .input_section > div {
+    grid-row: 1/3;
+} */
