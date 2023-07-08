@@ -14,23 +14,28 @@
         text-align: center;
     }
 
-    .eula-container h2:first-child{
+    .eula-container h2:first-child {
         text-align: center !important;
         text-transform: uppercase;
         margin-top: 0px;
     }
 
-    .eula-container p, .agree-checkbox{
+    .eula-container p,
+    .agree-checkbox {
         font-size: 16px;
     }
 
-    .agree-checkbox{
+    .agree-checkbox {
         margin-left: 5px;
+    }
+
+    #modal {
+        margin-top: 40px;
     }
 </style>
 <div id="modal">
     <div class="eula-container">
-        <h2>End User License Agreement</h2>  
+        <h2>End User License Agreement</h2>
         <p>Please read this End User License Agreement (the "Agreement") carefully before using the software.</p>
 
         <p>
@@ -56,7 +61,8 @@
 
         <div class="checkbox-container">
             <input type="checkbox" id="agree-checkbox">
-            <label for="agree-checkbox" class="agree-checkbox">I agree to the terms and conditions of this Agreement.</label>
+            <label for="agree-checkbox" class="agree-checkbox">I agree to the terms and conditions of this
+                Agreement.</label>
         </div>
 
     </div>

@@ -1,12 +1,39 @@
-{literal}
-    <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js"></script>
-    <script src="/ojs/plugins/generic/DonateButtonPlugin/js/donate_button.js"></script>
-    <link rel="stylesheet" href="/ojs/plugins/generic/DonateButtonPlugin/css/style.css">
-    <script type="module" crossorigin src="/ojs/plugins/generic/DonateButtonPlugin/js/index-5fa8768b.js"></script>
-    <link rel="stylesheet" href="/ojs/plugins/generic/DonateButtonPlugin/css/index-cfec9cd2.css">
-{/literal}
+<script>
+    function loadCSS(url) {
+        var linkElement = document.createElement('link');
+        linkElement.rel = 'stylesheet';
+        linkElement.href = url;
+        document.head.appendChild(linkElement);
+    }
+
+    let url = window.location.href;
+    function getServerFromUrl(url) {
+        var parser = document.createElement('a');
+        parser.href = url;
+        var protocol = parser.protocol;
+        var server = parser.hostname;
+        var result = protocol + '//' + server;
+        return result;
+    }
+
+    function getUrlBeforeIndexPhp(url) {
+        var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+        var matches = url.match(regex);
+        if (matches && matches.length > 1) {
+            return matches[1];
+        }
+        return url;
+    }
+
+    var server = getServerFromUrl(url);
+    var path = getUrlBeforeIndexPhp(url);
+
+    // Call the loadCSS function to load the CSS files
+    loadCSS('https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css');
+    loadCSS(server + path + '/plugins/generic/DonateButtonPlugin/css/style.css');
+    loadCSS(server + path + '/plugins/generic/DonateButtonPlugin/css/index-cfec9cd2.css');
+</script>
+
 
 <section class="item">
     <div class="root" id="root"></div>
