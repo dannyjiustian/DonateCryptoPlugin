@@ -1,0 +1,46 @@
+#smartContractContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+#smartContractContainer h3 {
+    margin: 0px;
+}
+
+.title_section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title_section div button {
+    width: 150px;
+}
+
+.publisher_wallet:focus {
+    outline: none;
+}
+
+input.publisher_wallet {
+    width: 400px !important;
+    padding: 10px 10px !important;
+    font-size: 16px !important;
+}
+
+.input_section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wallet-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.add_reviewer_section{
+    display: flex;
+    justify-content: flex-end;
+}
