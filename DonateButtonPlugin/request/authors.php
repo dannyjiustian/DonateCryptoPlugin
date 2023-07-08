@@ -19,11 +19,27 @@ try {
         $crypto_wallet_address = $authorData['crypto_wallet_address'];
         $email = $authorData['email'];
         $publication_id = $authorData['publication_id'];
+        $percentage = $authorData['percentage'];
+        $type = $authorData['type'];
 
-        if ($author_id != null) {
-            $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE author_id = :author_id";
+        if ($type == "update_wallet") {
+            if ($author_id != null) {
+                $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE author_id = :author_id";
+                $statement = $pdo->prepare($query);
+                $statement->bindParam(':walletAddress', $crypto_wallet_address);
+                $statement->bindParam(':author_id', $author_id);
+                $exec = $statement->execute();
+
+                if ($exec) {
+                    $response['data'] = 'Update successful';
+                } else {
+                    $response['data'] = 'Update failed';
+                }
+            }
+        } else if ($type == "update_percentage") {
+            $query = "UPDATE authors SET percentage = :percentage WHERE author_id = :author_id";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $crypto_wallet_address);
+            $statement->bindParam(':percentage', $percentage);
             $statement->bindParam(':author_id', $author_id);
             $exec = $statement->execute();
 
@@ -32,8 +48,8 @@ try {
             } else {
                 $response['data'] = 'Update failed';
             }
-        } 
-        if($author_id == null){
+        }
+        if ($author_id == null) {
             $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE email = :email AND publication_id = :publication_id";
             $statement = $pdo->prepare($query);
             $statement->bindParam(':walletAddress', $crypto_wallet_address);
@@ -50,15 +66,40 @@ try {
 
         // $response['data'] = $author_id;
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        if (isset($_GET['author_id'])) {
-            $author_id = $_GET['author_id'];
+        $type = $_GET['type'];
+        if (isset($type) &&  $type === 'getById') {
+            if (isset($_GET['author_id'])) {
+                $author_id = $_GET['author_id'];
 
-            $query = "SELECT * FROM authors WHERE author_id = '$author_id'";
-            $exec = $pdo->query($query);
+                $query = "SELECT * FROM authors WHERE author_id = '$author_id'";
+                $exec = $pdo->query($query);
 
-            $row = $exec->fetchAll(PDO::FETCH_ASSOC);
+                $row = $exec->fetchAll(PDO::FETCH_ASSOC);
 
-            $response['data'] = $row;
+                $response['data'] = $row;
+            }
+        } else if (isset($type) &&  $type === 'getAllAuthorData') {
+            if (isset($_GET['submission_id'])) {
+                $submission_id = $_GET['submission_id'];
+
+                $query = "SELECT * FROM authors WHERE publication_id = '$submission_id'";
+                $exec = $pdo->query($query);
+
+                $row = $exec->fetchAll(PDO::FETCH_ASSOC);
+
+                $response['data'] = $row;
+            }
+        } else if (isset($type) &&  $type === 'getAuthorSettings') {
+            if (isset($_GET['author_id'])) {
+                $author_id = $_GET['author_id'];
+
+                $query = "SELECT * FROM author_settings WHERE author_id = '$author_id'";
+                $exec = $pdo->query($query);
+
+                $row = $exec->fetchAll(PDO::FETCH_ASSOC);
+
+                $response['data'] = $row;
+            }
         }
     } else {
         $response['success'] = false;
