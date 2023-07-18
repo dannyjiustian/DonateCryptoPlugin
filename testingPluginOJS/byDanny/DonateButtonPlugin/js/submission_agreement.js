@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     let author_data = data.data;
                     if (author_data.length > 0) {
                         author_data.forEach(author => {
-                            authorWalletList.push(author.crypto_wallet_address);
+                            authorWalletList.push(author.wallet_address);
                         });
                     }
                     // console.log(publications);

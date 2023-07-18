@@ -19,13 +19,15 @@ class DonateButtonPlugin extends GenericPlugin
                 HookRegistry::register('TemplateManager::display', array($this, 'checkAuthorURL'));
                 HookRegistry::register('TemplateManager::display', array($this, 'checkReviewURL'));
                 HookRegistry::register('LoadHandler', array($this, 'websiteSettings'));
+                HookRegistry::register('LoadHandler', array($this, 'checkPublishUrl'));
                 $this->modifyDatabase();
-                $this->addSmartContractTable();
-                $this->addSubmissionTable();
-                $this->addAddressAuthorsTable();
-                $this->addAddressPublishersTable();
-                $this->addAddressReviewersTable();
-                $this->addPercentageSettingsTable();
+                $this->createSmartContractTable();
+                $this->createSubmissionTable();
+                // $this->createAddressAuthorsTable();
+                // $this->createAddressPublishersTable();
+                // $this->createAddressReviewersTable();
+                $this->createPercentageSettingsTable();
+                // $this->createReviewersTable();
                 // $this->dropCustomTable();
             }
             return true;
@@ -50,6 +52,7 @@ class DonateButtonPlugin extends GenericPlugin
         return $this->getEnabled();
     }
 
+    // Function to make the plugin import some of the javascript
     private function importJavascript($templateMgr, $request, $type)
     {
         $templateMgr->addJavaScript(
@@ -78,6 +81,7 @@ class DonateButtonPlugin extends GenericPlugin
         );
     }
 
+    // Function to make the plugin import some of the stylesheets
     private function importStylesheet($templateMgr, $request, $type)
     {
         $templateMgr->addStyleSheet(
@@ -98,8 +102,8 @@ class DonateButtonPlugin extends GenericPlugin
         );
     }
 
-
-    public function addButton($hookName, $args)
+    // Function to create a donate button in article page
+    public function createButton($hookName, $args)
     {
         $smarty = &$args[1];
         $output = &$args[2];
@@ -108,6 +112,7 @@ class DonateButtonPlugin extends GenericPlugin
 
         $article = $smarty->getTemplateVars('article');
 
+        // Make sure the article is exist and published
         if ($article && $article->getStatus() === STATUS_PUBLISHED) {
 
             $templateMgr->addJavaScript(
@@ -136,27 +141,13 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
+    // Function to add a field to existing database table from OJS
     private function modifyDatabase()
     {
         try {
             $schema = Capsule::schema();
 
             $newFields = array(
-                // array(
-                //     'tableName' => 'publications',
-                //     'fieldName' => 'wallet_address_author',
-                //     'type' => 'string'
-                // ),
-                // array(
-                //     'tableName' => 'publications',
-                //     'fieldName' => 'wallet_address_reviewer',
-                //     'type' => 'string'
-                // ),
-                // array(
-                //     'tableName' => 'publications',
-                //     'fieldName' => 'wallet_address_publisher',
-                //     'type' => 'string'
-                // ),
                 array(
                     'tableName' => 'publications',
                     'fieldName' => 'author_agreement',
@@ -174,18 +165,23 @@ class DonateButtonPlugin extends GenericPlugin
                 ),
                 array(
                     'tableName' => 'publications',
-                    'fieldName' => 'contract_address',
-                    'type' => 'string'
+                    'fieldName' => 'publisher_id',
+                    'type' => 'integer'
                 ),
                 array(
                     'tableName' => 'authors',
-                    'fieldName' => 'crypto_wallet_address',
+                    'fieldName' => 'wallet_address',
                     'type' => 'string'
                 ),
                 array(
                     'tableName' => 'authors',
                     'fieldName' => 'percentage',
                     'type' => 'integer'
+                ),
+                array(
+                    'tableName' => 'users',
+                    'fieldName' => 'wallet_address',
+                    'type' => 'string'
                 ),
             );
 
@@ -198,8 +194,10 @@ class DonateButtonPlugin extends GenericPlugin
                     $schema->table($tableName, function ($table) use ($fieldName, $type) {
                         if ($type === 'string') {
                             $table->string($fieldName)->nullable();
-                        } else if ($type === 'boolean') {
+                        } else if ($type === 'boolean' && $fieldName !== 'publisher_agreement') {
                             $table->boolean($fieldName)->default(false)->nullable();
+                        } else if ($type === 'boolean' && $fieldName === 'publisher_agreement') {
+                            $table->boolean($fieldName)->default(true)->nullable();
                         } else if ($type === 'integer') {
                             $table->integer($fieldName)->default(false)->nullable();
                         }
@@ -211,7 +209,8 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
-    private function addSmartContractTable()
+    // Function to create a new table called "smart_contract"
+    private function createSmartContractTable()
     {
         try {
             $schema = Capsule::schema();
@@ -224,6 +223,7 @@ class DonateButtonPlugin extends GenericPlugin
                     $table->integer('percentages_publisher');
                     $table->integer('percentages_reviewers');
                     $table->integer('percentages_authors');
+                    $table->integer('percentage_editors');
                     $table->timestamp('expired')->nullable();
                 });
             }
@@ -232,7 +232,8 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
-    private function addSubmissionTable()
+    // Function to create a new table called "submission"
+    private function createSubmissionTable()
     {
         try {
             $schema = Capsule::schema();
@@ -251,62 +252,65 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
-    private function addAddressPublishersTable()
-    {
-        try {
-            $schema = Capsule::schema();
+    // // Function to create a new table called "address_publishers"
+    // private function createAddressPublishersTable()
+    // {
+    //     try {
+    //         $schema = Capsule::schema();
 
-            // Add a new table
-            if (!$this->checkTableInDB('address_publishers')) {
-                $schema->create('address_publishers', function ($table) {
-                    $table->increments('id');
-                    $table->string('smart_contract_address');
-                    $table->string('wallet_address');
-                });
-            }
-        } catch (Exception $e) {
-            throw new Exception('Database connection error: ' . $e->getMessage());
-        }
-    }
+    //         // Add a new table
+    //         if (!$this->checkTableInDB('address_publishers')) {
+    //             $schema->create('address_publishers', function ($table) {
+    //                 $table->increments('id');
+    //                 $table->string('smart_contract_address');
+    //                 $table->string('wallet_address');
+    //             });
+    //         }
+    //     } catch (Exception $e) {
+    //         throw new Exception('Database connection error: ' . $e->getMessage());
+    //     }
+    // }
 
-    private function addAddressAuthorsTable()
-    {
-        try {
-            $schema = Capsule::schema();
+    // // Function to create a new table called "address_authors"
+    // private function createAddressAuthorsTable()
+    // {
+    //     try {
+    //         $schema = Capsule::schema();
 
-            // Add a new table
-            if (!$this->checkTableInDB('address_authors')) {
-                $schema->create('address_authors', function ($table) {
-                    $table->increments('id');
-                    $table->string('smart_contract_address');
-                    $table->string('wallet_address');
-                });
-            }
-        } catch (Exception $e) {
-            throw new Exception('Database connection error: ' . $e->getMessage());
-        }
-    }
+    //         // Add a new table
+    //         if (!$this->checkTableInDB('address_authors')) {
+    //             $schema->create('address_authors', function ($table) {
+    //                 $table->increments('id');
+    //                 $table->string('smart_contract_address');
+    //                 $table->string('wallet_address');
+    //             });
+    //         }
+    //     } catch (Exception $e) {
+    //         throw new Exception('Database connection error: ' . $e->getMessage());
+    //     }
+    // }
 
+    // // Function to create a new table called "address_reviewers"
+    // private function createAddressReviewersTable()
+    // {
+    //     try {
+    //         $schema = Capsule::schema();
 
-    private function addAddressReviewersTable()
-    {
-        try {
-            $schema = Capsule::schema();
+    //         // Add a new table
+    //         if (!$this->checkTableInDB('address_reviewers')) {
+    //             $schema->create('address_reviewers', function ($table) {
+    //                 $table->increments('id');
+    //                 $table->string('smart_contract_address');
+    //                 $table->string('wallet_address');
+    //             });
+    //         }
+    //     } catch (Exception $e) {
+    //         throw new Exception('Database connection error: ' . $e->getMessage());
+    //     }
+    // }
 
-            // Add a new table
-            if (!$this->checkTableInDB('address_reviewers')) {
-                $schema->create('address_reviewers', function ($table) {
-                    $table->increments('id');
-                    $table->string('smart_contract_address');
-                    $table->string('wallet_address');
-                });
-            }
-        } catch (Exception $e) {
-            throw new Exception('Database connection error: ' . $e->getMessage());
-        }
-    }
-
-    private function addPercentageSettingsTable()
+    // Function to create a new table called "percentage_settings"
+    private function createPercentageSettingsTable()
     {
         try {
             $schema = Capsule::schema();
@@ -314,25 +318,19 @@ class DonateButtonPlugin extends GenericPlugin
             // Add a new table
             if (!$this->checkTableInDB('percentage_settings')) {
                 $schema->create('percentage_settings', function ($table) {
-                    $table->increments('id');
+                    $table->integer('publisher_id')->primary();
                     $table->integer('percentage_publisher');
                     $table->integer('percentage_reviewers');
                     $table->integer('percentage_authors');
+                    $table->integer('percentage_editors');
                 });
-
-                // Insert data into the newly created table
-                $percentageSettingsData = [
-                    'percentage_publisher' => 0,
-                    'percentage_reviewers' => 0,
-                    'percentage_authors' => 0,
-                ];
-                $schema->getConnection()->table('percentage_settings')->insert($percentageSettingsData);
             }
         } catch (Exception $e) {
             throw new Exception('Database connection error: ' . $e->getMessage());
         }
     }
 
+    // Function to remove all tables that we created
     private function dropCustomTable()
     {
         try {
@@ -353,17 +351,22 @@ class DonateButtonPlugin extends GenericPlugin
             if ($this->checkTableInDB('address_reviewers')) {
                 $schema->dropIfExists('address_reviewers');
             }
+            if ($this->checkTableInDB('percentage_settings')) {
+                $schema->dropIfExists('percentage_settings');
+            }
         } catch (Exception $e) {
             throw new Exception('Database connection error: ' . $e->getMessage());
         }
     }
 
+    // Function to check if table is exist in database or not
     private function checkTableInDB($tableName)
     {
         $schema = Capsule::schema();
         return $schema->hasTable($tableName);
     }
 
+    // Function to check if a field is exist in table or not
     private function checkColumnInDB($tableName, $fieldName)
     {
         try {
@@ -382,6 +385,7 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
+    // Function to push a javascript and css file based on the url
     public function checkAuthorURL($hookName, $args)
     {
         $request = Application::get()->getRequest();
@@ -392,7 +396,7 @@ class DonateButtonPlugin extends GenericPlugin
             //Javascript
             $templateMgr->addJavaScript(
                 'addWalletScript',
-                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/add_wallet.js?v=' . time(),
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/author_agreement.js?v=' . time(),
                 array(
                     'priority' => STYLE_SEQUENCE_LAST,
                     'contexts' => ['backend'],
@@ -417,6 +421,7 @@ class DonateButtonPlugin extends GenericPlugin
         }
     }
 
+    // Function to push a javascript and css file based on the url
     public function checkReviewURL($hookName, $args)
     {
         $request = Application::get()->getRequest();
@@ -436,11 +441,48 @@ class DonateButtonPlugin extends GenericPlugin
                     'contexts' => ['backend'],
                 )
             );
+            $templateMgr->addStyleSheet(
+                'reviewSubmissionStylesheet',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css/submission.css?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['backend']
+                )
+            );
+            $this->importJavascript($templateMgr, $request, 'backend');
+            $this->importStylesheet($templateMgr, $request, 'backend');
         } else {
             error_log("URL does not match the pattern.");
         }
     }
 
+    // Function to push a javascript and css file based on the url
+    public function checkPublishUrl($hookName, $args)
+    {
+        $request = Application::get()->getRequest();
+        $url = $request->getCompleteUrl();
+        $templateMgr = TemplateManager::getManager($request);
+
+        $pattern = '/\/workflow\/index\/(\d+)\/(\d+)/';
+
+        if (preg_match_all($pattern, $url, $matches)) {
+            // Javascript
+            $templateMgr->addJavaScript(
+                'publishArticle',
+                $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js/publish_article.js?v=' . time(),
+                array(
+                    'priority' => STYLE_SEQUENCE_LAST,
+                    'contexts' => ['backend'],
+                )
+            );
+            $this->importJavascript($templateMgr, $request, 'backend');
+            $this->importStylesheet($templateMgr, $request, 'backend');
+        } else {
+            error_log("URL does not match the pattern.");
+        }
+    }
+
+    // Function to push a javascript and css file based on the url
     public function websiteSettings($hookName, $args)
     {
         $request = Application::get()->getRequest();

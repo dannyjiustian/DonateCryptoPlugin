@@ -16,34 +16,38 @@ try {
         $authorData = json_decode($authorData, true);
 
         $author_id = $authorData['author_id'];
-        $crypto_wallet_address = $authorData['crypto_wallet_address'];
+        $wallet_address = $authorData['wallet_address'];
         $email = $authorData['email'];
         $publication_id = $authorData['publication_id'];
 
         if ($author_id != null) {
-            $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE author_id = :author_id";
+            $query = "UPDATE authors SET wallet_address = :walletAddress WHERE author_id = :author_id";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $crypto_wallet_address);
+            $statement->bindParam(':walletAddress', $wallet_address);
             $statement->bindParam(':author_id', $author_id);
             $exec = $statement->execute();
 
             if ($exec) {
+                $response['success'] = true;
                 $response['data'] = 'Update successful';
             } else {
+                $response['success'] = false;
                 $response['data'] = 'Update failed';
             }
-        } 
-        if($author_id == null){
-            $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE email = :email AND publication_id = :publication_id";
+        }
+        if ($author_id == null) {
+            $query = "UPDATE authors SET wallet_address = :walletAddress WHERE email = :email AND publication_id = :publication_id";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $crypto_wallet_address);
+            $statement->bindParam(':walletAddress', $wallet_address);
             $statement->bindParam(':email', $email);
             $statement->bindParam(':publication_id', $publication_id);
             $exec = $statement->execute();
 
             if ($exec) {
+                $response['success'] = true;
                 $response['data'] = 'Update successful in update';
             } else {
+                $response['success'] = false;
                 $response['data'] = 'Update failed';
             }
         }
@@ -58,14 +62,24 @@ try {
 
             $row = $exec->fetchAll(PDO::FETCH_ASSOC);
 
-            $response['data'] = $row;
+            if ($row) {
+                $response['data'] = $row;
+            } else {
+                $response['success'] = false;
+                $response['message'] = 'No author data found for id : ' . $author_id;
+            }
         }
     } else {
         $response['success'] = false;
         $response['data'] = "Invalid request method.";
+        http_response_code(500);
     }
 } catch (Exception $e) {
+    $response['status'] = false;
+    $response['message'] = "Invalid request method.";
+    $response['data'] = $e->getMessage();
     throw new Exception($e->getMessage());
+    http_response_code(500);
 }
 
 header('Content-Type: application/json');

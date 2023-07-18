@@ -20,7 +20,12 @@ try {
 
             $row = $exec->fetchAll(PDO::FETCH_ASSOC);
 
-            $response['data'] = $row;
+            if ($row) {
+                $response['data'] = $row;
+            } else {
+                $response['success'] = false;
+                $response['message'] = 'No publication data found for id : ' . $publication_id;
+            }
         }
     } else {
         $response['success'] = false;

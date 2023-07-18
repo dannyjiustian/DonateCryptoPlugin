@@ -158,7 +158,7 @@ input.percentage::-webkit-outer-spin-button, input.percentage::-webkit-inner-spi
     margin: 0;
 }
 
-.author_wallet .sub_label, .error_field .sub_label {
+.author_wallet .sub_label, .error_field .sub_label, .dp-wallet-address .sub_label{
     font-size: .875rem;
     line-height: 1.5rem;
     font-weight: 400;

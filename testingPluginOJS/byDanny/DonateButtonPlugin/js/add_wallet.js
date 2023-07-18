@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
             author_id: null,
             email: null,
             publication_id: getUrlParameter('submissionId'),
-            crypto_wallet_address: null,
+            wallet_address: null,
         };
         let pkpGridInterval;
         let isCheckPKPCalled = false;
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     let authors = data.data[0]
-                    author.crypto_wallet_address = authors.crypto_wallet_address;
+                    author.wallet_address = authors.wallet_address;
                 })
                 .catch(error => {
                     console.log(error);
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 addButton.click(() => {
                     author.author_id = null;
-                    author.crypto_wallet_address = null;
+                    author.wallet_address = null;
                     setTimeout(checkModalVisibility, 300);
                 })
             }
@@ -148,19 +148,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         target.after(div.append(walletAddressLabel, walletAddressInput));
                     }
 
-                    walletAddressInput.val(author.crypto_wallet_address);
+                    walletAddressInput.val(author.wallet_address);
 
                     walletAddressInput.on('input', function () {
-                        author.crypto_wallet_address = $(this).val()
+                        author.wallet_address = $(this).val()
                     });
 
 
                     let saveButton = $(".pkp_button.submitFormButton");
                     if (!saveButton.hasEventListener) {
                         saveButton.click(function () {
-                            // author.crypto_wallet_address = walletAddressInput.val();
+                            // author.wallet_address = walletAddressInput.val();
                             author.email = $(".field.text.required.email").val();
-                            if (author.crypto_wallet_address !== "" && author.crypto_wallet_address !== null) {
+                            if (author.wallet_address !== "" && author.wallet_address !== null) {
                                 setTimeout(() => {
                                     editAuthorWallet();
                                 }, 1000)

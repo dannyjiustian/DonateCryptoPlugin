@@ -18,16 +18,36 @@
             $submissionId = $postData['submissionId'];
             $agreement = $postData['agreement'];
 
-            $query = "UPDATE publications SET author_agreement = :authorAgreement WHERE submission_id = :submissionId";
-            $statement = $pdo->prepare($query);
-            $statement->bindParam(':authorAgreement', $agreement);
-            $statement->bindParam(':submissionId', $submissionId);
-            $exec = $statement->execute();
+            $type = $_GET['type'];
 
-            if ($exec) {
-                $response['data'] = 'Update successful';
-            } else {
-                $response['data'] = 'Update failed';
+            if (isset($type)) {
+                if ($type === 'updateAuthorAgreement') {
+                    $query = "UPDATE publications SET author_agreement = :authorAgreement WHERE submission_id = :submissionId";
+                    $statement = $pdo->prepare($query);
+                    $statement->bindParam(':authorAgreement', $agreement);
+                    $statement->bindParam(':submissionId', $submissionId);
+                    $exec = $statement->execute();
+
+                    if ($exec) {
+                        $response['data'] = 'Update successful';
+                    } else {
+                        $response['success'] = false;
+                        $response['data'] = 'Update failed';
+                    }
+                } else if ($type === 'updateReviewerAgreement') {
+                    $query = "UPDATE publications SET reviewer_agreement = :reviewer_agreement WHERE submission_id = :submissionId";
+                    $statement = $pdo->prepare($query);
+                    $statement->bindParam(':reviewer_agreement', $agreement);
+                    $statement->bindParam(':submissionId', $submissionId);
+                    $exec = $statement->execute();
+
+                    if ($exec) {
+                        $response['data'] = 'Update successful';
+                    } else {
+                        $response['success'] = false;
+                        $response['data'] = 'Update failed';
+                    }
+                }
             }
         } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if (isset($_GET['submissionId'])) {
@@ -38,7 +58,12 @@
 
                 $row = $exec->fetchAll(PDO::FETCH_ASSOC);
 
-                $response['data'] = $row;
+                if ($row) {
+                    $response['data'] = $row;
+                } else {
+                    $response['success'] = false;
+                    $response['data'] = 'No submission data found for id : ' . $submissionId;
+                }
             }
         } else {
             $response['success'] = false;

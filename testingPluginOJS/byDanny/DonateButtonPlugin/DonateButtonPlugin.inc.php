@@ -98,7 +98,7 @@ class DonateButtonPlugin extends GenericPlugin
                 ),
                 array(
                     'tableName' => 'authors',
-                    'fieldName' => 'crypto_wallet_address',
+                    'fieldName' => 'wallet_address',
                     'type' => 'string'
                 ),
             );

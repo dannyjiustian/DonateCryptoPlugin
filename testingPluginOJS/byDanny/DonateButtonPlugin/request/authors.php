@@ -16,14 +16,14 @@ try {
         $authorData = json_decode($authorData, true);
 
         $author_id = $authorData['author_id'];
-        $crypto_wallet_address = $authorData['crypto_wallet_address'];
+        $wallet_address = $authorData['wallet_address'];
         $email = $authorData['email'];
         $publication_id = $authorData['publication_id'];
 
         if ($author_id != null) {
-            $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE author_id = :author_id";
+            $query = "UPDATE authors SET wallet_address = :walletAddress WHERE author_id = :author_id";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $crypto_wallet_address);
+            $statement->bindParam(':walletAddress', $wallet_address);
             $statement->bindParam(':author_id', $author_id);
             $exec = $statement->execute();
 
@@ -34,9 +34,9 @@ try {
             }
         } 
         if($author_id == null){
-            $query = "UPDATE authors SET crypto_wallet_address = :walletAddress WHERE email = :email AND publication_id = :publication_id";
+            $query = "UPDATE authors SET wallet_address = :walletAddress WHERE email = :email AND publication_id = :publication_id";
             $statement = $pdo->prepare($query);
-            $statement->bindParam(':walletAddress', $crypto_wallet_address);
+            $statement->bindParam(':walletAddress', $wallet_address);
             $statement->bindParam(':email', $email);
             $statement->bindParam(':publication_id', $publication_id);
             $exec = $statement->execute();

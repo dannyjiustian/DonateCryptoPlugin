@@ -1,4 +1,5 @@
 <script>
+    // Function to create a link element and append it to head 
     function loadCSS(url) {
         var linkElement = document.createElement('link');
         linkElement.rel = 'stylesheet';

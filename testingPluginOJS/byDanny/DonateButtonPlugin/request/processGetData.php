@@ -12,7 +12,7 @@
         $response = $postData;
       } else {
         $response['status'] = false;
-        $response['message'] = "No data is sent to this method!";
+        $response['data'] = "No data is sent to this method!";
         http_response_code(500);
       }
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -55,7 +55,7 @@
           $response = json_decode($result);
         } else {
           $response['status'] = false;
-          $response['message'] = 'Failure to create smart contract';
+          $response['data'] = 'Failure to create smart contract';
           $response['data'] = "id submission not found! ID: $id_submission";
         }
       } else if (isset($type) && $type === "getABIDatabase") {
@@ -69,7 +69,7 @@
 
         if ($row) {
           $response['status'] = true;
-          $response['message'] = "Successfully get ABI data";
+          $response['data'] = "Successfully get ABI data";
           $response['data'] = [
             "address_contract" => $row["smart_contract_address"],
             "abi_json_url" => "http://localhost:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json",
@@ -77,7 +77,7 @@
           ];
         } else {
           $response['status'] = false;
-          $response['message'] = 'Failure to get ABI data';
+          $response['data'] = 'Failure to get ABI data';
           $response['data'] = "id submission not found! ID: $id_submission";
         }
       } else if (isset($type) && $type === "getDataDatabase") {
@@ -117,7 +117,7 @@
           $rowFiles = $stmt->fetch(PDO::FETCH_ASSOC);
 
           $response['status'] = true;
-          $response['message'] = "Successfully get address data";
+          $response['data'] = "Successfully get address data";
           $response['data'] = [
             "publishers" => [
               "percentages" => $rowPercentages["percentages_publisher"],
@@ -136,17 +136,17 @@
           ];
         } else {
           $response['status'] = false;
-          $response['message'] = 'Failure to get ABI data';
+          $response['data'] = 'Failure to get ABI data';
           $response['data'] = "id submission not found! ID: $id_submission";
         }
       } else {
         $response['status'] = false;
-        $response['message'] = "Invalid request params type.";
+        $response['data'] = "Invalid request params type.";
         http_response_code(500);
       }
     } else {
       $response['status'] = false;
-      $response['message'] = "Invalid request method.";
+      $response['data'] = "Invalid request method.";
       http_response_code(500);
     }
   } catch (Exception $e) {
