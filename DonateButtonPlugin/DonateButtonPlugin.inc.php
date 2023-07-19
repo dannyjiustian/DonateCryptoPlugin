@@ -223,7 +223,7 @@ class DonateButtonPlugin extends GenericPlugin
                     $table->integer('percentages_publisher');
                     $table->integer('percentages_reviewers');
                     $table->integer('percentages_authors');
-                    $table->integer('percentage_editors');
+                    // $table->integer('percentage_editors');
                     $table->timestamp('expired')->nullable();
                 });
             }
@@ -322,7 +322,7 @@ class DonateButtonPlugin extends GenericPlugin
                     $table->integer('percentage_publisher');
                     $table->integer('percentage_reviewers');
                     $table->integer('percentage_authors');
-                    $table->integer('percentage_editors');
+                    // $table->integer('percentage_editors');
                 });
             }
         } catch (Exception $e) {

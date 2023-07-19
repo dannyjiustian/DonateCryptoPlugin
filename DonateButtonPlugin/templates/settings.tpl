@@ -30,11 +30,6 @@
                     <input type="number" placeholder="Input publishers percentage" id="publishers_percentage"
                         name="publishers_percentage" class="publishers_percentage percentage_field number" />
                 </div>
-                <div>
-                    <label for="editors_percentage" class="dp-label">Editors Percentage (%)</label>
-                    <input type="number" placeholder="Input editors percentage" id="editors_percentage"
-                        name="editors_percentage" class="editors_percentage percentage_field number" />
-                </div>
             </div>
         </div>
         <div class="error_field">

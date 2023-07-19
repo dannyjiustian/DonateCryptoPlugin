@@ -8,13 +8,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 percentage_authors: 0,
                 percentage_reviewers: 0,
                 percentage_publisher: 0,
-                percentage_editors: 0,
             },
             reviewersData = [],
             username = null,
             wallet_address = null,
             server = getServerFromUrl(url),
-            path = getUrlBeforeIndexPhp(url);
+            path = getUrlBeforeIndexPhp(url),
+            buttonClicked = "";
 
 
         // ---------------------------------------------------- FUNCTIONS --------------------------------------------------
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         percentage_settings.percentage_authors = data.data[0].percentage_authors
                         percentage_settings.percentage_reviewers = data.data[0].percentage_reviewers
                         percentage_settings.percentage_publisher = data.data[0].percentage_publisher
-                        percentage_settings.percentage_editors = data.data[0].percentage_editors
+                        // percentage_settings.percentage_editors = data.data[0].percentage_editors
                         // console.log(publications);
                     })
                     .catch(error => {
@@ -131,15 +131,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Function to get all user with Role reviewer
         async function getAllReviewerRole() {
-            await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/reviewers.php?type=getReviewerRole')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data)
-                    reviewersData = data.data
-                })
-                .catch(error => {
-                    console.log(error);
-                });
+            try {
+                await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/reviewers.php?type=getReviewerRole')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        reviewersData = data.data
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            } catch (error) {
+                console.log(error)
+            }
         }
 
         /**
@@ -271,12 +275,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (parentElement) {
                     var checkboxes = parentElement.querySelectorAll('input[type="checkbox"]');
-                    checkboxes.forEach(function (checkbox) {
-                        if (checkbox.value !== '33') {
-                            checkbox.disabled = true;
-                        }
-                    });
-
+                    if(buttonClicked == "reviewer"){
+                        checkboxes.forEach(function (checkbox) {
+                            if (checkbox.value !== '33') {
+                                checkbox.disabled = true;
+                            }
+                        });
+                    }
+                    if(buttonClicked == "editor"){
+                        checkboxes.forEach(function (checkbox) {
+                            if (checkbox.value !== '24') {
+                                checkbox.disabled = true;
+                            }
+                        });
+                    }
                 } else {
                     console.log('Checkbox element not found');
                 }
@@ -487,14 +499,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                 percentage_settings.percentage_authors = $("#authors_percentage").val()
                                 percentage_settings.percentage_reviewers = $("#reviewers_percentage").val()
                                 percentage_settings.percentage_publisher = $("#publishers_percentage").val()
-                                percentage_settings.percentage_editors = $("#editors_percentage").val()
+                                // percentage_settings.percentage_editors = $("#editors_percentage").val()
                                 return validateTotal();
                             },
                             didOpen: () => {
                                 $("#authors_percentage").val(percentage_settings.percentage_authors)
                                 $("#reviewers_percentage").val(percentage_settings.percentage_reviewers)
                                 $("#publishers_percentage").val(percentage_settings.percentage_publisher)
-                                $("#editors_percentage").val(percentage_settings.percentage_editors)
+                                // $("#editors_percentage").val(percentage_settings.percentage_editors)
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -520,6 +532,26 @@ document.addEventListener('DOMContentLoaded', function () {
                         error_label.text("")
                     }
                 })
+
+                function checkButton() {
+                    let addReviewerButton = $("#add_reviewer_button");
+                    // let addEditorButton = $("#add_editor_button");
+
+                    if (addReviewerButton.length) {
+                        addReviewerButton.on('click', () => {
+                            buttonClicked = "reviewer"
+                            // console.log(buttonClicked)
+                        })
+
+                        // addEditorButton.on('click', () => {
+                        //     buttonClicked = "editor"
+                        //     // console.log(buttonClicked)
+                        // })
+                    } else {
+                        setTimeout(checkButton, 100);
+                    }
+                }
+                checkButton()
 
                 observeParentElement();
             } else {

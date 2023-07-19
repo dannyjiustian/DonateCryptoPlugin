@@ -49,7 +49,7 @@
                 <a href="http://localhost/ojs/index.php/journal_test/$$$call$$$/grid/settings/user/user-grid/add-user"
                     id="component-grid-settings-user-usergrid-addUser-button"
                     class="pkp_controllers_linkAction pkp_linkaction_addUser pkp_linkaction_icon_add_user">
-                    <button class="pkp_button">Add Reviewer</button>
+                    <button class="pkp_button" id="add_reviewer_button">Add Reviewer</button>
                 </a>
                 <script>
                     $(function() {

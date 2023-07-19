@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
             url = window.location.href,
             publisher_id,
             server = getServerFromUrl(url),
-            path = getUrlBeforeIndexPhp(url);
+            path = getUrlBeforeIndexPhp(url),
+            publications = [];
 
 
         //-------------------------------------------FUNCTIONS --------------------------------
@@ -117,6 +118,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /**
+        * function to get publication data by submission id
+        * @param {*} submissionId 
+        */
+        async function getPublications() {
+            try {
+                await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/publications.php?submissionId=' + submission_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        publications = data.data[0]
+                        console.log(publications)
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        /**
          * Function to get publisher id by username
          * @param {*} username 
          */
@@ -154,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             await getPublisherId(username);
                         }
                         submission_id = matches[1];
+                        await getPublications();
                     }, 500)
                 }
 
@@ -164,8 +186,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (publishButton.length) {
                         // IF available then add a click to that button to create smart contract
                         publishButton.on('click', async function () {
-                            console.log("Publish")
-                            await createSmartContract();
+                            // console.log("Publish")
+                            if(publications.author_agreement == 1 && publications.publisher_agreement == 1 && publications.reviewer_agreement == 1){
+                                await createSmartContract();
+                            }
                         })
                     } else {
                         setTimeout(checkPublishButton, 100)
