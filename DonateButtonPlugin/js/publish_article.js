@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             await getPublisherId(username);
                         }
                         submission_id = matches[1];
+                        console.log(submission_id)
                         await getPublications();
                     }, 500)
                 }

@@ -19,7 +19,7 @@ try {
         $percentage_authors = $percentage['percentage_authors'];
         $percentage_reviewers = $percentage['percentage_reviewers'];
         $percentage_publisher = $percentage['percentage_publisher'];
-        $percentage_editors = $percentage['percentage_editors'];
+
 
         // Check if the table `percentage_settings` already has the publisher_id
         $query = "SELECT * FROM percentage_settings WHERE publisher_id = :publisher_id";
@@ -30,23 +30,21 @@ try {
 
         if ($row) {
             // Update the record
-            $query = "UPDATE percentage_settings SET percentage_authors = :percentage_authors, percentage_reviewers = :percentage_reviewers, percentage_publisher = :percentage_publisher, percentage_editors = :percentage_editors WHERE publisher_id = :publisher_id";
+            $query = "UPDATE percentage_settings SET percentage_authors = :percentage_authors, percentage_reviewers = :percentage_reviewers, percentage_publisher = :percentage_publisher WHERE publisher_id = :publisher_id";
             $statement = $pdo->prepare($query);
             $statement->bindParam(':percentage_authors', $percentage_authors);
             $statement->bindParam(':percentage_reviewers', $percentage_reviewers);
             $statement->bindParam(':percentage_publisher', $percentage_publisher);
-            $statement->bindParam(':percentage_editors', $percentage_editors);
             $statement->bindParam(':publisher_id', $publisher_id);
             $exec = $statement->execute();
         } else {
             // Add a new record
-            $query = "INSERT INTO percentage_settings (publisher_id, percentage_authors, percentage_reviewers, percentage_publisher, percentage_editors) VALUES (:publisher_id, :percentage_authors, :percentage_reviewers, :percentage_publisher, :percentage_editors)";
+            $query = "INSERT INTO percentage_settings (publisher_id, percentage_authors, percentage_reviewers, percentage_publisher) VALUES (:publisher_id, :percentage_authors, :percentage_reviewers, :percentage_publisher)";
             $statement = $pdo->prepare($query);
             $statement->bindParam(':publisher_id', $publisher_id);
             $statement->bindParam(':percentage_authors', $percentage_authors);
             $statement->bindParam(':percentage_reviewers', $percentage_reviewers);
             $statement->bindParam(':percentage_publisher', $percentage_publisher);
-            $statement->bindParam(':percentage_editors', $percentage_editors);
             $exec = $statement->execute();
         }
 

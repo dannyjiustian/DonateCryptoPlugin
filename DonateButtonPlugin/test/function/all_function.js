@@ -139,6 +139,16 @@ const allFunction = {
         } catch (error) {
             return error;
         }
+    },
+    //----------------------------PUBLISH_ARTICLE.JS----------------------------
+    createSmartContract: async function (submission_id, publisher_id) {
+        try {
+            const response = await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=createSmartContract&id_submission=' + submission_id + "&publisher_id=" + publisher_id)
+            const data = await response.json();
+            return data.status;
+        } catch (error) {
+            return error;
+        }
     }
 };
 

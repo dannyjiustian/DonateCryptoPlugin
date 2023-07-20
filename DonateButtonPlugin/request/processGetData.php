@@ -18,9 +18,9 @@ try {
     }
   } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $type = $_GET['type'];
-    if (isset($type) && $type === "createSmartContract") {
-      $id_submission = $_GET['id_submission'];
-      $publisher_id = $_GET['publisher_id'];
+    $id_submission = $_GET['id_submission'];
+    $publisher_id = $_GET['publisher_id'];
+    if (isset($type) && $type === "createSmartContract" && isset($id_submission) && isset($publisher_id)) {
 
       $findPublication = "UPDATE publications SET publisher_id = :publisher_id WHERE submission_id = :submission_id";
       $stmtPublication = $pdo->prepare($findPublication);
@@ -40,7 +40,6 @@ try {
         $percentage_authors = $execGetAgreement['percentage_authors'];
         $percentage_reviewers = $execGetAgreement['percentage_reviewers'];
         $percentage_publisher = $execGetAgreement['percentage_publisher'];
-        $percentage_editors = $execGetAgreement['percentage_editors'];
 
         //All agree to monetization
         if ($author_agreement == 1 && $reviewer_agreement == 1 && $publisher_agreement == 1) {
@@ -85,7 +84,7 @@ try {
               $expired_timestamp = $current_timestamp + (2 * 365 * 24 * 60 * 60);
               $expired_timestamp = date('Y-m-d H:i:s', $expired_timestamp);
 
-              $saveSmartContract = "INSERT INTO smart_contract (id_submission, smart_contract_address, percentages_publisher, percentages_reviewers, percentages_authors, percentages_editors, expired) VALUES ($id_submission, '$smart_contract', $percentage_publisher, $percentage_reviewers, $percentage_authors, $percentage_editors, '$expired_timestamp')";
+              $saveSmartContract = "INSERT INTO smart_contract (id_submission, smart_contract_address, percentages_publisher, percentages_reviewers, percentages_authors, expired) VALUES ($id_submission, '$smart_contract', $percentage_publisher, $percentage_reviewers, $percentage_authors, '$expired_timestamp')";
 
               $statement = $pdo->prepare($saveSmartContract);
               $exec = $statement->execute();

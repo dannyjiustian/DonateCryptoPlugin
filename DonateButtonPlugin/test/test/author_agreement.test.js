@@ -44,7 +44,7 @@ describe('getPublications', () => {
             })
         );
 
-     
+
         const submissionId = 54;
         const result = await allFunction.getPublications(submissionId);
 
@@ -99,7 +99,7 @@ describe('getAuthorWallet', () => {
             })
         );
 
-     
+
         const author_id = 2;
         const result = await allFunction.getAuthorWallet(author_id);
 
@@ -182,7 +182,7 @@ describe('getAllAuthorData', () => {
             })
         );
 
-     
+
         const author_id = 2;
         const submissionId = 54;
         const result = await allFunction.getAllAuthorData(author_id, submissionId);
