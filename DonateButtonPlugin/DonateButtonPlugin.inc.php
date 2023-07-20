@@ -103,7 +103,7 @@ class DonateButtonPlugin extends GenericPlugin
     }
 
     // Function to create a donate button in article page
-    public function createButton($hookName, $args)
+    public function addButton($hookName, $args)
     {
         $smarty = &$args[1];
         $output = &$args[2];
