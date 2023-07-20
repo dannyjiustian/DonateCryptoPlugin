@@ -146,21 +146,27 @@ try {
         $smart_contract_address = $rowPercentages["smart_contract_address"];
 
         // Fetch address publishers
-        $query = "SELECT wallet_address FROM address_publishers WHERE smart_contract_address LIKE :smart_contract_address";
+        // $query = "SELECT wallet_address FROM address_publishers WHERE smart_contract_address LIKE :smart_contract_address";
+        $query = "SELECT wallet_address FROM authors WHERE publication_id = :publication_id";
         $stmt = $pdo->prepare($query);
-        $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        $stmt->execute(['publication_id' => $id_submission]);
         $addressPublishers = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch address reviewers
-        $query = "SELECT wallet_address FROM address_reviewers WHERE smart_contract_address LIKE :smart_contract_address";
+        // $query = "SELECT wallet_address FROM address_reviewers WHERE smart_contract_address LIKE :smart_contract_address";
+        $query = "SELECT users.wallet_address FROM review_assignments INNER JOIN users ON review_assignments.reviewer_id = users.user_id WHERE review_assignments.submission_id = :publication_id";
         $stmt = $pdo->prepare($query);
-        $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        $stmt->execute(['publication_id' => $id_submission]);
         $addressReviewers = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch address authors
-        $query = "SELECT wallet_address FROM address_authors WHERE smart_contract_address LIKE :smart_contract_address";
+        // $query = "SELECT wallet_address FROM address_authors WHERE smart_contract_address LIKE :smart_contract_address";
+        $query = "SELECT users.wallet_address FROM publications INNER JOIN users ON publications.publisher_id = users.user_id WHERE publications.submission_id = :publication_id";
         $stmt = $pdo->prepare($query);
-        $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
+        $stmt->execute(['publication_id' => $id_submission]);
         $addressAuthors = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch files data
