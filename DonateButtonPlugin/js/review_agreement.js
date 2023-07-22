@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
             username = null,
             wallet_address = null,
             isValid = false;
-            server = getServerFromUrl(url),
+        server = getServerFromUrl(url),
             path = getUrlBeforeIndexPhp(url);
 
         //-----------------------------------------------------FUNCTIONS----------------------------------------------------
@@ -425,60 +425,67 @@ document.addEventListener('DOMContentLoaded', function () {
                 checkValidWalletAddress();
 
                 //Add a agreement checkbox before a form button
-                setTimeout(() => {
+                function checkFormButton() {
                     const submitSection = $(".formButtons.form_buttons");
 
-                    let flagAgreement = $('<div>').addClass('flag-agreement');
-                    let checkbox = $('<input>').attr({
-                        type: 'checkbox',
-                        id: 'flagAgreementCheckbox',
-                        class: 'flag-agreement-checkbox'
-                    });
-                    let label = $('<span>').attr({
-                        'for': 'flagAgreementCheckbox', 'class': 'dp-span'
-                    }).text('I agree about the monetization of this journal');
+                    if (submitSection.length) {
 
-                    flagAgreement.append(checkbox, label.append("<span class='read_terms'>Read terms</span>"));
-                    submitSection.before(flagAgreement)
+                        let flagAgreement = $('<div>').addClass('flag-agreement');
+                        let checkbox = $('<input>').attr({
+                            type: 'checkbox',
+                            id: 'flagAgreementCheckbox',
+                            class: 'flag-agreement-checkbox'
+                        });
+                        let label = $('<span>').attr({
+                            'for': 'flagAgreementCheckbox', 'class': 'dp-span'
+                        }).text('I agree about the monetization of this journal');
 
-                    checkbox.on('click', function () {
-                        showModal($(this))
-                        if ($(this).is(":checked")) {
-                            checkbox.prop('checked', false)
-                        } else {
-                            checkbox.prop('checked', true)
-                        }
-                    });
+                        flagAgreement.append(checkbox, label.append("<span class='read_terms'>Read terms</span>"));
+                        submitSection.before(flagAgreement)
 
-                    // if publications data is available
-                    if (publications) {
-                        // if publication review agreement is true or 1 then check the agreement checkbox
-                        if (publications.reviewer_agreement == "1") {
-                            checkbox.prop('checked', true);
-                            if (checkbox.is(":checked")) {
-                                agreed = true;
-                                let submitButton = $(".pkp_button.submitFormButton:contains('Submit Review')");
-                                let saveButton = $(".pkp_button.saveFormButton");
-
-                                if (agreed) {
-                                    checkbox.prop('checked', true);
-
-                                    if (submitButton.length > 0) {
-                                        submitButton.prop('disabled', true);
-                                    }
-
-                                    if (saveButton.length > 0) {
-                                        saveButton.prop('disabled', true);
-                                    }
-                                    showInput();
-                                }
+                        checkbox.on('click', function () {
+                            showModal($(this))
+                            if ($(this).is(":checked")) {
+                                checkbox.prop('checked', false)
                             } else {
-                                checkbox.prop('checked', false);
-                                agreed = false;
+                                checkbox.prop('checked', true)
+                            }
+                        });
+
+                        // if publications data is available
+                        if (publications) {
+                            // if publication review agreement is true or 1 then check the agreement checkbox
+                            if (publications.reviewer_agreement == "1") {
+                                checkbox.prop('checked', true);
+                                if (checkbox.is(":checked")) {
+                                    agreed = true;
+                                    let submitButton = $(".pkp_button.submitFormButton:contains('Submit Review')");
+                                    let saveButton = $(".pkp_button.saveFormButton");
+
+                                    if (agreed) {
+                                        checkbox.prop('checked', true);
+
+                                        if (submitButton.length > 0) {
+                                            submitButton.prop('disabled', true);
+                                        }
+
+                                        if (saveButton.length > 0) {
+                                            saveButton.prop('disabled', true);
+                                        }
+                                        showInput();
+                                    }
+                                } else {
+                                    checkbox.prop('checked', false);
+                                    agreed = false;
+                                }
                             }
                         }
+                    } else {
+                        setTimeout(checkFormButton, 100)
                     }
-                }, 1000)
+                }
+
+                checkFormButton();
 
                 // Add a click event listener to button with id "validate_address" to validate address in input fieldl
                 $(document).on('click', '#validate_address', async function () {
