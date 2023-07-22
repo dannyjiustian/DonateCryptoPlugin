@@ -4,9 +4,13 @@ let contractABI,
   limits,
   address = [],
   percentages = [],
+  percentages_authors = [],
+  address_authors = [],
   documentHash,
   doi,
-  expired;
+  expired,
+  statusABI,
+  ABIurl;
 
 // Function to fetch the ABI from a API Smart Contract
 const fetchAddress = async () => {
@@ -19,18 +23,7 @@ const fetchAddress = async () => {
     const databaseData = await response.json();
 
     // Calculate limits based on the number of addresses in the database
-    limits = [
-      0,
-      databaseData.data.publishers.address.length,
-      databaseData.data.publishers.address.length,
-      databaseData.data.reviewers.address.length +
-        databaseData.data.publishers.address.length,
-      databaseData.data.reviewers.address.length +
-        databaseData.data.publishers.address.length,
-      databaseData.data.authors.address.length +
-        databaseData.data.reviewers.address.length +
-        databaseData.data.publishers.address.length,
-    ];
+    limits = [0, 1, 1, databaseData.data.reviewers.address.length + 1];
 
     // Flatten the address data from the database
     address = Object.values(databaseData.data)
@@ -41,8 +34,18 @@ const fetchAddress = async () => {
     // Flatten the percentages data from the database
     percentages = Object.values(databaseData.data)
       .flat()
-      .flatMap((item) => item.percentages)
+      .flatMap((item) => item.percentage)
       .filter((percentages) => percentages != null);
+
+    percentages_authors = Object.values(databaseData.data.authors.data_authors)
+      .flat()
+      .flatMap((item) => item.percentage)
+      .filter((percentages_authors) => percentages_authors != null);
+
+    address_authors = Object.values(databaseData.data.authors.data_authors)
+      .flat()
+      .flatMap((item) => item.address)
+      .filter((address_authors) => address_authors != null);
 
     // Get document hash from the database
     documentHash = databaseData.data.documentHash;
@@ -62,9 +65,10 @@ const fetchABI = async () => {
         .pop()}`
     );
     const data = await response.json();
+    statusABI = data.status;
     contractAddress = data.data.address_contract;
     expired = data.data.expired;
-    await fetchContractABI(data.data.abi_json_url);
+    ABIurl = data.data.abi_json_url;
   } catch (error) {
     console.log(`Error fetching ABI: ${error}`);
   }
@@ -149,227 +153,248 @@ document.addEventListener("DOMContentLoaded", function () {
         // Fetch the ABI
         await fetchABI();
 
-        if (new Date().getTime() > new Date(expired).getTime() !== true) {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const signer = provider.getSigner();
+        if (statusABI) {
+          if (new Date().getTime() > new Date(expired).getTime() !== true) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
 
-          // Fecth the Address
-          await fetchAddress();
+            // Fetch the Address
+            await fetchAddress();
 
-          // Create a contract instance
-          const transactionContract = new ethers.Contract(
-            contractAddress,
-            contractABI,
-            signer
-          );
+            // Fetch the Contract ABI
+            await fetchContractABI(ABIurl);
 
-          // If need get all transaction in smart contract
-          // const data = await transactionContract.getAllTransaction();
-          // console.log(data);
+            // Create a contract instance
+            const transactionContract = new ethers.Contract(
+              contractAddress,
+              contractABI,
+              signer
+            );
 
-          // Get elements from the donation form
-          const donateSnap = document.querySelector("#donate-snap");
-          const closeDonateSnap = document.querySelector("#closeDonate");
-          const addressWallet = document.querySelector("#address-crypto");
-          const connectWallet = document.querySelector("#connectWallet");
-          const donationAmount = document.querySelector("#amount");
-          const donationMessage = document.querySelector("#message");
-          const sendNow = document.querySelector("#sendNow");
+            // If need get all transaction in smart contract
+            // const data = await transactionContract.getAllTransaction();
+            // console.log(data);
 
-          // Show the "Connect Wallet" button and disable "Send Now" button
-          connectWallet.classList.remove("invisible");
-          connectWallet.classList.add("visible");
-          addressWallet.innerHTML = "Not Connect";
-          sendNow.disabled = true;
+            // Get elements from the donation form
+            const donateSnap = document.querySelector("#donate-snap");
+            const closeDonateSnap = document.querySelector("#closeDonate");
+            const addressWallet = document.querySelector("#address-crypto");
+            const connectWallet = document.querySelector("#connectWallet");
+            const donationAmount = document.querySelector("#amount");
+            const donationMessage = document.querySelector("#message");
+            const sendNow = document.querySelector("#sendNow");
 
-          // Function to handle the donation process
-          const donateProcess = async () => {
-            if (donationAmount.value !== null && donationAmount.value !== "") {
-              // Parse the donation amount in Ether
-              const amount = ethers.utils.parseEther(donationAmount.value);
-              const senderAddress = await getSenderUserAddress();
+            // Show the "Connect Wallet" button and disable "Send Now" button
+            connectWallet.classList.remove("invisible");
+            connectWallet.classList.add("visible");
+            addressWallet.innerHTML = "Not Connect";
+            sendNow.disabled = true;
 
-              // Check the sender's balance
-              const balance = await provider.getBalance(senderAddress);
-              const balanceInEth = ethers.utils.formatEther(balance);
+            // Function to handle the donation process
+            const donateProcess = async () => {
+              if (
+                donationAmount.value !== null &&
+                donationAmount.value !== ""
+              ) {
+                // Parse the donation amount in Ether
+                const amount = ethers.utils.parseEther(donationAmount.value);
+                const senderAddress = await getSenderUserAddress();
 
-              // Check if the donation amount exceeds the sender's balance
-              if (parseFloat(donationAmount.value) > parseFloat(balanceInEth)) {
-                createToast(
-                  "error",
-                  "Insufficient balance",
-                  "Cannot proceed with the donation.",
-                  "#ff5f6d"
-                );
-                return;
-              }
+                // Check the sender's balance
+                const balance = await provider.getBalance(senderAddress);
+                const balanceInEth = ethers.utils.formatEther(balance);
 
-              // Show a loading toast notification
-              createToast("loading");
-
-              // Override transaction value with the donation amount
-              const overrides = {
-                value: amount,
-              };
-
-              // Call the addTransaction function of the contract
-              const addTransactionProcess = await transactionContract
-                .addTransaction(
-                  limits,
-                  address,
-                  percentages,
-                  documentHash,
-                  doi,
-                  donationMessage.value,
-                  overrides
-                )
-                .catch(() => {
-                  iziToast.destroy();
+                // Check if the donation amount exceeds the sender's balance
+                if (
+                  parseFloat(donationAmount.value) > parseFloat(balanceInEth)
+                ) {
                   createToast(
                     "error",
-                    "The transaction canceled!",
-                    "Please try again.",
+                    "Insufficient balance",
+                    "Cannot proceed with the donation.",
                     "#ff5f6d"
                   );
+                  return;
+                }
+
+                // Show a loading toast notification
+                createToast("loading");
+
+                // Override transaction value with the donation amount
+                const overrides = {
+                  value: amount,
+                };
+
+                // Call the addTransaction function of the contract
+                const addTransactionProcess = await transactionContract
+                  .addTransaction(
+                    percentages,
+                    limits,
+                    address,
+                    percentages_authors,
+                    address_authors,
+                    documentHash,
+                    doi,
+                    donationMessage.value,
+                    overrides
+                  )
+                  .catch((error) => {
+                    iziToast.destroy();
+                    createToast(
+                      "error",
+                      "The transaction canceled!",
+                      "Please try again.",
+                      "#ff5f6d"
+                    );
+                  });
+                const response = await addTransactionProcess.wait();
+
+                // If need send response from smart contract
+                const dataTransfer = [];
+                response.events.map((data) => {
+                  const args = Object.values(data.args).flat();
+                  let res = {
+                    from: args[0],
+                    receiver: args[1],
+                    amount: parseInt(args[2]._hex) / 10 ** 18,
+                    documentHash: args[3],
+                    doi: args[4],
+                    message: args[5],
+                    timestamps: new Date(
+                      parseInt(args[4]._hex) * 1000
+                    ).toLocaleString(),
+                  };
+                  dataTransfer.push(res);
                 });
-              const response = await addTransactionProcess.wait();
 
-              // // If need send response from smart contract
-              // const dataTransfer = [];
-              // response.events.map((data) => {
-              //   const args = Object.values(data.args).flat();
-              //   let res = {
-              //     from: args[0],
-              //     receiver: args[1],
-              //     amount: parseInt(args[2]._hex) / 10 ** 18,
-              //     documentHash: args[3],
-              //     doi: args[4],
-              //     message: args[5],
-              //     timestamps: new Date(
-              //       parseInt(args[4]._hex) * 1000
-              //     ).toLocaleString(),
-              //   };
-              //   dataTransfer.push(res);
-              // });
+                // Send response to Database
+                const sendRes = {
+                  contractAddress,
+                  transactionHash: `${response.transactionHash}`,
+                  block: `${response.blockNumber}`,
+                  status: `${response.status}`,
+                  dataTransfer,
+                };
 
-              // // Send response to Database
-              // const sendRes = {
-              //   contractAddress,
-              //   transactionHash: `${response.transactionHash}`,
-              //   block: `${response.blockNumber}`,
-              //   status: `${response.status}`,
-              //   dataTransfer,
-              // };
+                // console.log(sendRes);
 
-              // fetch(
-              //   "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php",
-              //   {
-              //     method: "POST",
-              //     headers: {
-              //       "Content-Type": "application/json",
-              //     },
-              //     body: JSON.stringify(sendRes),
-              //   }
-              // ).then((response) => console.log(response));
+                // fetch(
+                //   "/ojs/plugins/generic/DonateButtonPlugin/request/processGetData.php",
+                //   {
+                //     method: "POST",
+                //     headers: {
+                //       "Content-Type": "application/json",
+                //     },
+                //     body: JSON.stringify(sendRes),
+                //   }
+                // ).then((response) => console.log(response));
 
-              // Destroy the loading toast and reset the form
-              iziToast.destroy();
+                // Destroy the loading toast and reset the form
+                iziToast.destroy();
+                body.classList.remove("overflow-hidden");
+                donateSnap.classList.add("invisible", "opacity-0");
+                donateSnap.classList.remove("visible", "opacity-100");
+                connectWallet.removeEventListener("click", checkWallet);
+                sendNow.removeEventListener("click", donateProcess);
+                donationAmount.value = "";
+                donationMessage.value = "";
+
+                // Show a success toast notification
+                createToast(
+                  "success",
+                  "Success",
+                  "Donation successful!",
+                  "#00b09b"
+                );
+              } else {
+                createToast(
+                  "error",
+                  "Enter the donation amount!",
+                  "Donation cannot be empty.",
+                  "#ff5f6d"
+                );
+              }
+            };
+
+            // Function to process the donation after connecting the wallet
+            const process = async () => {
+              const senderAddress = await getSenderUserAddress();
+
+              // Hide the "Connect Wallet" button, show the sender's address, and enable "Send Now" button
+              connectWallet.classList.remove("visible");
+              connectWallet.classList.add("invisible");
+              addressWallet.innerHTML = sliceAddress(senderAddress);
+              sendNow.disabled = false;
+
+              if (senderAddress !== null) {
+                sendNow.addEventListener("click", donateProcess);
+              }
+            };
+
+            // Function to check the wallet status after clicking the "Connect Wallet" button
+            const checkWallet = async () => {
+              const accounts = await window.ethereum.request({
+                method: "eth_requestAccounts",
+              });
+              if (accounts.length > 0) {
+                connectWallet.removeEventListener("click", checkWallet);
+              }
+
+              // Hide the "Connect Wallet" button, show the sender's address, and enable "Send Now" button
+              connectWallet.classList.remove("visible");
+              connectWallet.classList.add("invisible");
+              addressWallet.innerHTML = sliceAddress(accounts[0]);
+              sendNow.disabled = false;
+              process();
+            };
+
+            // Add classes and reset the form
+            body.classList.add("overflow-hidden");
+            donateSnap.classList.remove("invisible", "opacity-0");
+            donateSnap.classList.add("visible", "opacity-100");
+            donationAmount.value = "";
+            donationMessage.value = "";
+
+            // Event listener for the close button of the donation form
+            closeDonateSnap.addEventListener("click", function () {
+              // Hide the donation form and reset the form values
               body.classList.remove("overflow-hidden");
               donateSnap.classList.add("invisible", "opacity-0");
               donateSnap.classList.remove("visible", "opacity-100");
-              connectWallet.removeEventListener("click", checkWallet);
-              sendNow.removeEventListener("click", donateProcess);
+              sendNow.disabled = true;
               donationAmount.value = "";
               donationMessage.value = "";
-
-              // Show a success toast notification
-              createToast(
-                "success",
-                "Success",
-                "Donation successful!",
-                "#00b09b"
-              );
-            } else {
-              createToast(
-                "error",
-                "Enter the donation amount!",
-                "Donation cannot be empty.",
-                "#ff5f6d"
-              );
-            }
-          };
-
-          // Function to process the donation after connecting the wallet
-          const process = async () => {
-            const senderAddress = await getSenderUserAddress();
-
-            // Hide the "Connect Wallet" button, show the sender's address, and enable "Send Now" button
-            connectWallet.classList.remove("visible");
-            connectWallet.classList.add("invisible");
-            addressWallet.innerHTML = sliceAddress(senderAddress);
-            sendNow.disabled = false;
-
-            if (senderAddress !== null) {
-              sendNow.addEventListener("click", donateProcess);
-            }
-          };
-
-          // Function to check the wallet status after clicking the "Connect Wallet" button
-          const checkWallet = async () => {
-            const accounts = await window.ethereum.request({
-              method: "eth_requestAccounts",
-            });
-            if (accounts.length > 0) {
               connectWallet.removeEventListener("click", checkWallet);
+              sendNow.removeEventListener("click", donateProcess);
+            });
+
+            const accounts = await provider.listAccounts();
+
+            // If no accounts are available, add event listener to the "Connect Wallet" button
+            if (accounts.length === 0) {
+              connectWallet.addEventListener("click", checkWallet);
             }
 
-            // Hide the "Connect Wallet" button, show the sender's address, and enable "Send Now" button
-            connectWallet.classList.remove("visible");
-            connectWallet.classList.add("invisible");
-            addressWallet.innerHTML = sliceAddress(accounts[0]);
-            sendNow.disabled = false;
-            process();
-          };
-
-          // Add classes and reset the form
-          body.classList.add("overflow-hidden");
-          donateSnap.classList.remove("invisible", "opacity-0");
-          donateSnap.classList.add("visible", "opacity-100");
-          donationAmount.value = "";
-          donationMessage.value = "";
-
-          // Event listener for the close button of the donation form
-          closeDonateSnap.addEventListener("click", function () {
-            // Hide the donation form and reset the form values
-            body.classList.remove("overflow-hidden");
-            donateSnap.classList.add("invisible", "opacity-0");
-            donateSnap.classList.remove("visible", "opacity-100");
-            sendNow.disabled = true;
-            donationAmount.value = "";
-            donationMessage.value = "";
-            connectWallet.removeEventListener("click", checkWallet);
-            sendNow.removeEventListener("click", donateProcess);
-          });
-
-          const accounts = await provider.listAccounts();
-
-          // If no accounts are available, add event listener to the "Connect Wallet" button
-          if (accounts.length === 0) {
-            connectWallet.addEventListener("click", checkWallet);
-          }
-
-          // If there is already a connected wallet or accounts are available, process the donation
-          if (
-            addressWallet.innerHTML !== "Not Connect" ||
-            accounts.length > 0
-          ) {
-            process();
+            // If there is already a connected wallet or accounts are available, process the donation
+            if (
+              addressWallet.innerHTML !== "Not Connect" ||
+              accounts.length > 0
+            ) {
+              process();
+            }
+          } else {
+            createToast(
+              "error",
+              "The contract expired!",
+              "If you still want to donate, please contact the admin!",
+              "#ff5f6d"
+            );
           }
         } else {
           createToast(
             "error",
-            "The contract expired!",
-            "If you still want to donate, please contact the admin!",
+            "Can't donate!",
+            "The author does not allow donations!",
             "#ff5f6d"
           );
         }
