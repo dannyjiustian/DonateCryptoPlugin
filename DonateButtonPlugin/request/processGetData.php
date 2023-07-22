@@ -5,18 +5,7 @@ try {
   $db = new Database();
   $pdo = $db->getConnection();
 
-  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $postData = file_get_contents('php://input');
-    $postData = json_decode($postData, true);
-    if ($postData !== null) {
-      // planning add to database
-      $response = $postData;
-    } else {
-      $response['status'] = false;
-      $response['message'] = "No data is sent to this method!";
-      http_response_code(500);
-    }
-  } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+  if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $type = $_GET['type'];
     $id_submission = $_GET['id_submission'];
     $publisher_id = $_GET['publisher_id'];
@@ -51,8 +40,7 @@ try {
           $execGetSubmission = $stmt->fetch(PDO::FETCH_ASSOC);
 
           if ($execGetSubmission) {
-            // $response = $execGetSubmission;
-            $url = 'http://localhost:3000/createSmartContract';
+            $url = 'http://139.177.187.236:3000/createSmartContract';
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -74,9 +62,6 @@ try {
             $result = curl_exec($curl);
             http_response_code($httpcode);
             curl_close($curl);
-            // address contract address will save/update into db
-            // json_decode($result)->data->address_contract;
-            // example output "0x5030C1E1dFd9B964415869990bC8eE1b56A5E91C"
             $smart_contract = json_decode($result)->data->address_contract;
 
             if ($smart_contract) {
@@ -125,7 +110,7 @@ try {
         $response['message'] = "Successfully get ABI data";
         $response['data'] = [
           "address_contract" => $row["smart_contract_address"],
-          "abi_json_url" => "http://localhost:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json",
+          "abi_json_url" => "http://139.177.187.236:3000/abi_json/ABI_FILE_JSON_SMARTCONTRACT.json",
           "expired" => $row["expired"]
         ];
       } else {
@@ -146,28 +131,30 @@ try {
         $smart_contract_address = $rowPercentages["smart_contract_address"];
 
         // Fetch address publishers
-        // $query = "SELECT wallet_address FROM address_publishers WHERE smart_contract_address LIKE :smart_contract_address";
-        $query = "SELECT wallet_address FROM authors WHERE publication_id = :publication_id";
+        $query = "SELECT users.wallet_address FROM publications INNER JOIN users ON publications.publisher_id = users.user_id WHERE publications.submission_id = :publication_id";
         $stmt = $pdo->prepare($query);
-        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
         $stmt->execute(['publication_id' => $id_submission]);
         $addressPublishers = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch address reviewers
-        // $query = "SELECT wallet_address FROM address_reviewers WHERE smart_contract_address LIKE :smart_contract_address";
         $query = "SELECT users.wallet_address FROM review_assignments INNER JOIN users ON review_assignments.reviewer_id = users.user_id WHERE review_assignments.submission_id = :publication_id";
         $stmt = $pdo->prepare($query);
-        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
         $stmt->execute(['publication_id' => $id_submission]);
         $addressReviewers = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch address authors
-        // $query = "SELECT wallet_address FROM address_authors WHERE smart_contract_address LIKE :smart_contract_address";
-        $query = "SELECT users.wallet_address FROM publications INNER JOIN users ON publications.publisher_id = users.user_id WHERE publications.submission_id = :publication_id";
+        $query = "SELECT * FROM authors WHERE publication_id = :publication_id ORDER BY percentage DESC";
         $stmt = $pdo->prepare($query);
-        // $stmt->execute(['smart_contract_address' => "%$smart_contract_address%"]);
         $stmt->execute(['publication_id' => $id_submission]);
-        $addressAuthors = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $addressAuthors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $data_authors = [];
+        foreach ($addressAuthors as $row) {
+          $data_authors[] = [
+            'address' => $row["wallet_address"],
+            'percentage' => $row["percentage"],
+          ];
+        }
 
         // Fetch files data
         $query = "SELECT * FROM files WHERE file_id = :file_id";
@@ -179,18 +166,18 @@ try {
         $response['message'] = "Successfully get address data";
         $response['data'] = [
           "publishers" => [
-            "percentages" => $rowPercentages["percentages_publisher"],
-            "address" => $addressPublishers,
+            "address" => $addressPublishers[0],
+            "percentage" => $rowPercentages["percentages_publisher"],
           ],
           "reviewers" => [
-            "percentages" => $rowPercentages["percentages_reviewers"],
             "address" => $addressReviewers,
+            "percentage" => $rowPercentages["percentages_reviewers"],
           ],
           "authors" => [
-            "percentages" => $rowPercentages["percentages_authors"],
-            "address" => $addressAuthors,
+            "data_authors" => $data_authors,
+            "percentage" => $rowPercentages["percentages_authors"],
           ],
-          "documentHash" => basename($rowFiles["path"]),
+          "documentHash" => hash('sha512', basename($rowFiles["path"])),
           "doi" => "b"
         ];
       } else {
