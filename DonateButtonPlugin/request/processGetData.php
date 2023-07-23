@@ -137,7 +137,7 @@ try {
         $addressPublishers = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch address reviewers
-        $query = "SELECT users.wallet_address FROM review_assignments INNER JOIN users ON review_assignments.reviewer_id = users.user_id WHERE review_assignments.submission_id = :publication_id AND review_assignments.date_confirmed IS NOT NULL";
+        $query = "SELECT users.wallet_address FROM review_assignments INNER JOIN users ON review_assignments.reviewer_id = users.user_id WHERE review_assignments.submission_id = :publication_id AND review_assignments.date_confirmed IS NOT NULL AND review_assignments.cancelled = 0 AND review_assignments.declined = 0";
         $stmt = $pdo->prepare($query);
         $stmt->execute(['publication_id' => $id_submission]);
         $addressReviewers = $stmt->fetchAll(PDO::FETCH_COLUMN);
