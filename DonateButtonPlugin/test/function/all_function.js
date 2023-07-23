@@ -149,7 +149,35 @@ const allFunction = {
         } catch (error) {
             return error;
         }
-    }
+    },
+    //----------------------------DONATE_BUTTON.JS----------------------------
+    getABIData: async function (submission_id) {
+        try {
+            const response = await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getABIDatabase&id_submission=' + submission_id)
+            const data = await response.json();
+            return data.status;
+        } catch (error) {
+            return error;
+        }
+    },
+    getABIJSON: async function (url) {
+        try {
+            const response = await fetch(url)
+            const data = await response.json();
+            return data.status;
+        } catch (error) {
+            return error;
+        }
+    },
+    getAddressWallet: async function (submission_id) {
+        try {
+            const response = await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=getDataDatabase&id_submission=' + submission_id)
+            const data = await response.json();
+            return data.status;
+        } catch (error) {
+            return error;
+        }
+    },
 };
 
 module.exports = allFunction
