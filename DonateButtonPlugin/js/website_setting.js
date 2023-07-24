@@ -275,14 +275,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (parentElement) {
                     var checkboxes = parentElement.querySelectorAll('input[type="checkbox"]');
-                    if(buttonClicked == "reviewer"){
+                    if (buttonClicked == "reviewer") {
                         checkboxes.forEach(function (checkbox) {
                             if (checkbox.value !== '33') {
                                 checkbox.disabled = true;
                             }
                         });
                     }
-                    if(buttonClicked == "editor"){
+                    if (buttonClicked == "editor") {
                         checkboxes.forEach(function (checkbox) {
                             if (checkbox.value !== '24') {
                                 checkbox.disabled = true;
@@ -380,18 +380,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                // Check if the address has a user associated with it
-                const balance = await provider.getBalance(address);
-                if (balance.isZero()) {
-                    // console.log('No user found for the address');
-                    label.text('No user found for the address');
+                // Use Etherscan API to verify the address
+                const etherscanApiKey = 'AGG2XS154PTEHCPNV6Y24ZPIAE7K8VRUS3';
+                const etherscanUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${etherscanApiKey}`;
+
+                const response = await fetch(etherscanUrl);
+                const data = await response.json();
+
+                if (data.status === '1') {
+                    label.text('Valid Ethereum address');
+                    if (address !== wallet_address) await updateAddress(address)
+                } else {
+                    label.text('No user found from this address');
                     label.addClass('invalid');
-                    return;
+                    invalidList.push({
+                        'index': index,
+                        status: 'invalid'
+                    });
                 }
 
-                // console.log('Valid Ethereum address with a user');
                 label.text('Valid Ethereum address');
-                if (address !== wallet_address) await updateAddress(address)
                 // Additional logic if needed
             } catch (error) {
                 console.log('Error:', error.message);

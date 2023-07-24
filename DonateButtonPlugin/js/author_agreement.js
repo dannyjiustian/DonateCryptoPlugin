@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
          */
         async function checkMetamaskAddress(address, index) {
             const provider = new ethers.providers.JsonRpcProvider('https://sepolia.infura.io/v3/7662a41850704f0f878a91a9ccf408a3');
-            let label = $("#label_valid_display_" + index)
+            let label = $("#label_valid_display_" + index);
 
             try {
                 // Validate the address format
@@ -283,24 +283,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     invalidList.push({
                         'index': index,
                         status: 'invalid'
-                    })
+                    });
                     return;
                 }
 
-                // Check if the address has a user associated with it
-                const balance = await provider.getBalance(address);
-                if (balance.isZero()) {
-                    // console.log('No user found for the address');
-                    label.text('No user found for the address');
+                // Use Etherscan API to verify the address
+                const etherscanApiKey = 'AGG2XS154PTEHCPNV6Y24ZPIAE7K8VRUS3';
+                const etherscanUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${etherscanApiKey}`;
+
+                const response = await fetch(etherscanUrl);
+                const data = await response.json();
+
+                if (data.status === '1') {
+                    label.text('Valid Ethereum address');
+                } else {
+                    label.text('No user found from this address');
                     label.addClass('invalid');
                     invalidList.push({
                         'index': index,
                         status: 'invalid'
-                    })
-                    return;
+                    });
                 }
 
-                label.text('Valid Ethereum address');
                 // Additional logic if needed
             } catch (error) {
                 console.log('Error:', error.message);
@@ -612,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 function addAgreementCheckbox() {
                     const authorGrid = $("#authorsGridContainer");
 
-                    console.log(authorGrid)
+                    // console.log(authorGrid)
                     if (authorGrid.length) {
                         let flagAgreement = $('<div>').addClass('flag-agreement');
                         let checkbox = $('<input>').attr({
@@ -719,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 pkpGridInterval = false
                             }
                         }, 100)
-                    } else{
+                    } else {
                         setTimeout(addAgreementCheckbox, 100)
                     }
                 }

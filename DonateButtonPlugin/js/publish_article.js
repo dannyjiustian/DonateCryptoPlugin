@@ -5,9 +5,15 @@ document.addEventListener('DOMContentLoaded', function () {
             submission_id,
             url = window.location.href,
             publisher_id,
+            publisher_wallet,
             server = getServerFromUrl(url),
             path = getUrlBeforeIndexPhp(url),
-            publications = [];
+            publications = [],
+            percentage_settings = {
+                percentage_authors: null,
+                percentage_reviewers: null,
+                percentage_publisher: null,
+            };
 
 
         //-------------------------------------------FUNCTIONS --------------------------------
@@ -44,6 +50,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
             }
         };
+
+        // Get percentage setting by publisher id
+        async function getPercentageSettings() {
+            try {
+                await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/percentage_settings.php?publisher_id=' + publisher_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        percentage_settings.percentage_authors = data.data[0].percentage_authors
+                        percentage_settings.percentage_reviewers = data.data[0].percentage_reviewers
+                        percentage_settings.percentage_publisher = data.data[0].percentage_publisher
+                        // percentage_settings.percentage_editors = data.data[0].percentage_editors
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            } catch (error) {
+                console.log(error);
+            }
+        }
 
         /**
          * Function to get a fragment from the URL
@@ -100,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/processGetData.php?type=createSmartContract&id_submission=' + submission_id + "&publisher_id=" + publisher_id)
                     .then((response) => response.json())
                     .then((data) => {
-                        console.log(data);
+                        // console.log(data);
                         if (data.status) {
                             iziToast.destroy();
                             createToast("success", "Success", "Smart Contract created", "#00b09b");
@@ -127,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(response => response.json())
                     .then(data => {
                         publications = data.data[0]
-                        console.log(publications)
+                        // console.log(publications)
                     })
                     .catch(error => {
                         console.log(error);
@@ -148,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then((data) => {
                         if (data.data.length > 0) {
                             publisher_id = data.data[0].user_id;
+                            publisher_wallet = data.data[0].wallet_address
                         }
                     })
                     .catch((error) => {
@@ -156,6 +182,18 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (error) {
                 createToast("error", "Error", error.message, "#ff5f6d");
             }
+        }
+
+        function checkForNullAndZero(obj) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    var value = obj[key];
+                    if (value === null || value === 0 || value === "0") {
+                        return false; // Found a null or 0 value, return false
+                    }
+                }
+            }
+            return true; // No null or 0 values found, return true
         }
 
         // Call the function to watch current fragment
@@ -175,29 +213,82 @@ document.addEventListener('DOMContentLoaded', function () {
                             await getPublisherId(username);
                         }
                         submission_id = matches[1];
-                        console.log(submission_id)
+                        // console.log(submission_id)
                         await getPublications();
+                        await getPercentageSettings();
                     }, 500)
                 }
+
+                let scheduleButton = $("button.pkpButton:contains('Schedule For Publication')");
+                scheduleButton.on("click", function () {
+                    checkPublishButton();
+                })
+
 
                 // Check publish function is available at DOM or not
                 function checkPublishButton() {
                     let publishButton = $("button.pkpButton:contains('Publish')");
 
                     if (publishButton.length) {
-                        // IF available then add a click to that button to create smart contract
-                        publishButton.on('click', async function () {
-                            // console.log("Publish")
-                            if(publications.author_agreement == 1 && publications.publisher_agreement == 1 && publications.reviewer_agreement == 1){
-                                await createSmartContract();
+                        console.log("Ada")
+                        let isValid = checkForNullAndZero(percentage_settings);
+                        let fieldset = $(".pkp_modal_panel").find("fieldset.pkpFormGroup.-pkpClearfix")
+                        let error = `
+                        <div class="error_field" 
+                            style="
+                                font-size: .875rem;
+                                line-height: 1.5rem;
+                                font-weight: 400;
+                                color: #d00a6c;
+                                font-weight: 600;
+                                margin-top: 5px;
+                                padding-left: 32px;
+                                ">
+                            <p>
+                                Error : 
+                                <ul class="error_list">
+
+                                </ul>
+                                <br />
+                                <a href='${server}${path}/index.php/journal_test/management/settings/website#setup/smartContract' style="text-decoration: none; font-weight: 500;">
+                                    Click here to go to setting and go to Smart Contract tab
+                                </a>
+                            </p>
+                        </div>
+                        `
+
+                        if (!isValid || publisher_wallet == "" || publisher_wallet == null) {
+                            if ($(".error_field").length == 0) {
+                                fieldset.after(error)
+                                $("ul.error_field").empty();
                             }
-                        })
+                            if (!isValid) {
+                                $("ul.error_list").append("<li>The percentage setting is not set properly!</li>")
+                            }
+                            
+                            if (publisher_wallet == "" || publisher_wallet == null) {
+                                $("ul.error_list").append("<li>Publisher wallet is not set properly!</li>")
+                            }
+                            publishButton.prop('disabled', true);
+                        }else{
+                            publishButton.prop('disabled', false);
+
+                            // IF available then add a click to that button to create smart contract
+                            publishButton.on('click', async function () {
+                                // console.log("Publish")
+                                if (publications.author_agreement == 1 && publications.publisher_agreement == 1 && publications.reviewer_agreement == 1) {
+                                    await createSmartContract();
+                                }
+                            })
+
+                        }
+
                     } else {
                         setTimeout(checkPublishButton, 100)
                     }
                 }
 
-                checkPublishButton();
+                // checkPublishButton();
             }
         })
 

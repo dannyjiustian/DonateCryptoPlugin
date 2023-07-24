@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(response => response.json())
                     .then(data => {
                         publications = data.data[0]
-                        console.log(publications);
+                        // console.log(publications);
                     })
                     .catch(error => {
                         console.log(error);
@@ -244,13 +244,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                // Check if the address has a user associated with it
-                const balance = await provider.getBalance(address);
-                if (balance.isZero()) {
-                    // console.log('No user found for the address');
-                    label.text('No user found for the address');
+                // Use Etherscan API to verify the address
+                const etherscanApiKey = 'AGG2XS154PTEHCPNV6Y24ZPIAE7K8VRUS3';
+                const etherscanUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${etherscanApiKey}`;
+
+                const response = await fetch(etherscanUrl);
+                const data = await response.json();
+
+                if (data.status === '1') {
+                    label.text('Valid Ethereum address');
+                    checkValidWalletAddress();
                     isValid = true;
+                    if (submitButton.length > 0) {
+                        submitButton.prop('disabled', false);
+                    }
+
+                    if (saveButton.length > 0) {
+                        saveButton.prop('disabled', false);
+                    }
+                    if (address !== reviewerAssignmentData.wallet_address) await updateAddress(address)
+                } else {
+                    label.text('No user found from this address');
                     label.addClass('invalid');
+                    invalidList.push({
+                        'index': index,
+                        status: 'invalid'
+                    });
                     if (submitButton.length > 0) {
                         submitButton.prop('disabled', true);
                     }
@@ -258,22 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (saveButton.length > 0) {
                         saveButton.prop('disabled', true);
                     }
-                    return;
                 }
-
-                // console.log('Valid Ethereum address with a user');
-                label.text('Valid Ethereum address');
-                checkValidWalletAddress();
-                isValid = true;
-                if (submitButton.length > 0) {
-                    submitButton.prop('disabled', false);
-                }
-
-                if (saveButton.length > 0) {
-                    saveButton.prop('disabled', false);
-                }
-                if (address !== reviewerAssignmentData.wallet_address) await updateAddress(address)
-                // Additional logic if needed
             } catch (error) {
                 console.log('Error:', error.message);
             }
@@ -416,6 +420,71 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        //Add a agreement checkbox before a form button
+        function checkFormButton() {
+            console.log("Checking")
+            var parentContainer = $('fieldset#reviewStep3');
+
+            var submitSection = parentContainer.find('div.section.formButtons.form_buttons');
+
+            if (parentContainer.length && submitSection.length) {
+                console.log(parentContainer)
+                console.log(submitSection)
+                let flagAgreement = $('<div>').addClass('flag-agreement');
+                let checkbox = $('<input>').attr({
+                    type: 'checkbox',
+                    id: 'flagAgreementCheckbox',
+                    class: 'flag-agreement-checkbox'
+                });
+                let label = $('<span>').attr({
+                    'for': 'flagAgreementCheckbox', 'class': 'dp-span'
+                }).text('I agree about the monetization of this journal');
+
+                flagAgreement.append(checkbox, label.append("<span class='read_terms'>Read terms</span>"));
+                submitSection.before(flagAgreement)
+
+                checkbox.on('click', function () {
+                    showModal($(this))
+                    if ($(this).is(":checked")) {
+                        checkbox.prop('checked', false)
+                    } else {
+                        checkbox.prop('checked', true)
+                    }
+                });
+
+                // if publications data is available
+                if (publications) {
+                    // if publication review agreement is true or 1 then check the agreement checkbox
+                    if (publications.reviewer_agreement == "1") {
+                        checkbox.prop('checked', true);
+                        if (checkbox.is(":checked")) {
+                            agreed = true;
+                            let submitButton = $(".pkp_button.submitFormButton:contains('Submit Review')");
+                            let saveButton = $(".pkp_button.saveFormButton");
+
+                            if (agreed) {
+                                checkbox.prop('checked', true);
+
+                                if (submitButton.length > 0) {
+                                    submitButton.prop('disabled', true);
+                                }
+
+                                if (saveButton.length > 0) {
+                                    saveButton.prop('disabled', true);
+                                }
+                                showInput();
+                            }
+                        } else {
+                            checkbox.prop('checked', false);
+                            agreed = false;
+                        }
+                    }
+                }
+            } else {
+                setTimeout(checkFormButton, 100)
+            }
+        }
+
         /**
          * Call the function for watch current active tab
          */
@@ -423,67 +492,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (value === 2) {
                 await getPublications();
                 checkValidWalletAddress();
-
-                //Add a agreement checkbox before a form button
-                function checkFormButton() {
-                    const submitSection = $(".formButtons.form_buttons");
-
-                    if (submitSection.length) {
-
-                        let flagAgreement = $('<div>').addClass('flag-agreement');
-                        let checkbox = $('<input>').attr({
-                            type: 'checkbox',
-                            id: 'flagAgreementCheckbox',
-                            class: 'flag-agreement-checkbox'
-                        });
-                        let label = $('<span>').attr({
-                            'for': 'flagAgreementCheckbox', 'class': 'dp-span'
-                        }).text('I agree about the monetization of this journal');
-
-                        flagAgreement.append(checkbox, label.append("<span class='read_terms'>Read terms</span>"));
-                        submitSection.before(flagAgreement)
-
-                        checkbox.on('click', function () {
-                            showModal($(this))
-                            if ($(this).is(":checked")) {
-                                checkbox.prop('checked', false)
-                            } else {
-                                checkbox.prop('checked', true)
-                            }
-                        });
-
-                        // if publications data is available
-                        if (publications) {
-                            // if publication review agreement is true or 1 then check the agreement checkbox
-                            if (publications.reviewer_agreement == "1") {
-                                checkbox.prop('checked', true);
-                                if (checkbox.is(":checked")) {
-                                    agreed = true;
-                                    let submitButton = $(".pkp_button.submitFormButton:contains('Submit Review')");
-                                    let saveButton = $(".pkp_button.saveFormButton");
-
-                                    if (agreed) {
-                                        checkbox.prop('checked', true);
-
-                                        if (submitButton.length > 0) {
-                                            submitButton.prop('disabled', true);
-                                        }
-
-                                        if (saveButton.length > 0) {
-                                            saveButton.prop('disabled', true);
-                                        }
-                                        showInput();
-                                    }
-                                } else {
-                                    checkbox.prop('checked', false);
-                                    agreed = false;
-                                }
-                            }
-                        }
-                    } else {
-                        setTimeout(checkFormButton, 100)
-                    }
-                }
 
                 checkFormButton();
 
