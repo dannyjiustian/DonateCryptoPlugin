@@ -221,7 +221,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 let scheduleButton = $("button.pkpButton:contains('Schedule For Publication')");
                 scheduleButton.on("click", function () {
-                    checkPublishButton();
+                    if (publications.author_agreement == 1 && publications.publisher_agreement == 1 && publications.reviewer_agreement == 1) {
+                        checkPublishButton();
+                    }
                 })
 
 
@@ -265,20 +267,18 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (!isValid) {
                                 $("ul.error_list").append("<li>The percentage setting is not set properly!</li>")
                             }
-                            
+
                             if (publisher_wallet == "" || publisher_wallet == null) {
                                 $("ul.error_list").append("<li>Publisher wallet is not set properly!</li>")
                             }
                             publishButton.prop('disabled', true);
-                        }else{
+                        } else {
                             publishButton.prop('disabled', false);
 
                             // IF available then add a click to that button to create smart contract
                             publishButton.on('click', async function () {
                                 // console.log("Publish")
-                                if (publications.author_agreement == 1 && publications.publisher_agreement == 1 && publications.reviewer_agreement == 1) {
-                                    await createSmartContract();
-                                }
+                                await createSmartContract();
                             })
 
                         }
