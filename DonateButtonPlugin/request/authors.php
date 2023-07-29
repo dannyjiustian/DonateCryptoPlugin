@@ -4,7 +4,8 @@
 
     $response = array(
         'success' => true,
-        'data' => ""
+        'data' => [],
+        'message' => "",
     );
 
     try {
@@ -31,9 +32,9 @@
                     $exec = $statement->execute();
 
                     if ($exec) {
-                        $response['data'] = 'Update successful';
+                        $response['message'] = 'Update successful';
                     } else {
-                        $response['data'] = 'Update failed';
+                        $response['message'] = 'Update failed';
                     }
                 }
             } else if ($type == "update_percentage") {
@@ -58,9 +59,9 @@
                 $exec = $statement->execute();
 
                 if ($exec) {
-                    $response['data'] = 'Update successful in update';
+                    $response['message'] = 'Update successful in update';
                 } else {
-                    $response['data'] = 'Update failed';
+                    $response['message'] = 'Update failed';
                 }
             }
 
@@ -80,7 +81,8 @@
                         $response['data'] = $row;
                     } else {
                         $response['success'] = false;
-                        $response['data'] = 'No author data found for id : ' . $author_id;
+                        $response['data'] = [];
+                        $response['message'] = 'No author data found for id : ' . $author_id;
                     }
                 }
             } else if (isset($type) &&  $type === 'getAllAuthorData') {
@@ -96,7 +98,8 @@
                         $response['data'] = $row;
                     } else {
                         $response['success'] = false;
-                        $response['data'] = 'No submission data found for id : ' . $submission_id;
+                        $response['data'] = [];
+                        $response['message'] = 'No submission data found for id : ' . $submission_id;
                     }
                 }
             } else if (isset($type) &&  $type === 'getAuthorSettings') {
@@ -112,7 +115,8 @@
                         $response['data'] = $row;
                     } else {
                         $response['success'] = false;
-                        $response['data'] = 'No author data found for id : ' . $author_id;
+                        $response['data'] = [];
+                        $response['message'] = 'No author data found for id : ' . $author_id;
                     }
                 }
             }

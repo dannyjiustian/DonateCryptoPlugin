@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
             publisher_wallet,
             server = getServerFromUrl(url),
             path = getUrlBeforeIndexPhp(url),
+            journalName = getDynamicJournalPart(url),
+            pathWithIndex = getUrlBeforeAndTheIndex(url),
             publications = [],
             percentage_settings = {
                 percentage_authors: null,
@@ -100,17 +102,58 @@ document.addEventListener('DOMContentLoaded', function () {
             parser.href = url;
             var protocol = parser.protocol;
             var server = parser.hostname;
-            var result = protocol + '//' + server;
+            var port = parser.port;
+            if (port) {
+                var result = protocol + '//' + server + ":" + port;
+            } else {
+                var result = protocol + '//' + server;
+            }
             return result;
         }
 
         function getUrlBeforeIndexPhp(url) {
-            var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
-            var matches = url.match(regex);
-            if (matches && matches.length > 1) {
-                return matches[1];
+            if (url.includes("/index.php")) {
+                var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+                var matches = url.match(regex);
+                if (matches && matches.length > 1) {
+                    return matches[1];
+                }
+            } else {
+                // For other cases, return the whole URL
+                return "";
             }
-            return url;
+        }
+        
+        function getUrlBeforeAndTheIndex(url) {
+            // console.log(url)
+            if (url.includes("/index.php")) {
+                var regex = /^(?:https?:\/\/[^/]+)?(.*?\/index\.php)/;
+                var matches = url.match(regex);
+                if (matches && matches.length > 1) {
+                    // console.log(matches[1])
+                    return matches[1];
+                }
+            } else {
+                // For other cases, return the whole URL
+                return "";
+            }
+        }
+
+        function getDynamicJournalPart(url) {
+            var regexWithIndexPhp = /\/(?:[^/]+\/)?index.php\/([^/$]+)\//;
+            var regexWithoutIndexPhp = /\/(?:[^/]+\/)?([^/$]+)\//;
+
+            if (url.includes("/index.php")) {
+                var matches = url.match(regexWithIndexPhp);
+                if (matches && matches.length > 1) {
+                    return matches[1];
+                }
+            } else {
+                var matches = url.match(regexWithoutIndexPhp);
+                if (matches && matches.length > 1) {
+                    return matches[1];
+                }
+            }
         }
 
 
@@ -199,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Call the function to watch current fragment
         watchCurrentFragment(async value => {
             if (value === "#publication") {
+                
                 let url = window.location.href;
                 const pattern = /\/workflow\/index\/(\d+)\/(\d+)/;
 
@@ -252,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 </ul>
                                 <br />
-                                <a href='${server}${path}/index.php/journal_test/management/settings/website#setup/smartContract' style="text-decoration: none; font-weight: 500;">
+                                <a href='${server}${pathWithIndex}/${journalName}/management/settings/website#setup/smartContract' style="text-decoration: none; font-weight: 500;">
                                     Click here to go to setting and go to Smart Contract tab
                                 </a>
                             </p>

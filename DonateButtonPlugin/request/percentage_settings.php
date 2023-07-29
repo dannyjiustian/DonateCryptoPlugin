@@ -4,7 +4,8 @@ require_once '../database/Database.inc.php';
 
 $response = array(
     'success' => true,
-    'data' => ""
+    'data' => [],
+    'message' => "",
 );
 
 try {
@@ -50,10 +51,10 @@ try {
 
         if ($exec) {
             $response['success'] = true;
-            $response['data'] = 'Update successful';
+            $response['message'] = 'Update successful';
         } else {
             $response['success'] = false;
-            $response['data'] = 'Update failed';
+            $response['message'] = 'Update failed';
         }
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $publisher_id = $_GET['publisher_id'];
@@ -67,11 +68,12 @@ try {
             $response['data'] = $row;
         } else {
             $response['success'] = false;
-            $response['data'] = 'No publisher data found for id : ' . $publisher_id;
+            $response['data'] = [];
+            $response['message'] = 'No publisher data found for id : ' . $publisher_id;
         }
     } else {
         $response['success'] = false;
-        $response['data'] = "Invalid request method.";
+        $response['message'] = "Invalid request method.";
     }
 } catch (Exception $e) {
     throw new Exception($e->getMessage());

@@ -4,7 +4,8 @@ require_once '../database/Database.inc.php';
 
 $response = array(
     'success' => true,
-    'data' => ""
+    'data' => [],
+    'message' => "",
 );
 
 try {
@@ -26,10 +27,10 @@ try {
             $exec = $statement->execute();
 
             if ($exec) {
-                $response['data'] = 'Insert successful';
+                $response['message'] = 'Insert successful';
             } else {
                 $response['success'] = false;
-                $response['data'] = 'Insert failed';
+                $response['message'] = 'Insert failed';
             }
         }
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -50,7 +51,8 @@ try {
                 $response['data'] = $row;
             } else {
                 $response['success'] = false;
-                $response['data'] = 'No user with role reviewer';
+                $response['message'] = 'No user with role reviewer';
+                $response['data'] = [];
             }
         }
 
@@ -66,13 +68,14 @@ try {
                     $response['data'] = $row;
                 } else {
                     $response['success'] = false;
-                    $response['data'] = 'No review assignment data found for id : ' . $reviewAssignmentId;
+                    $response['data'] = [];
+                    $response['message'] = 'No review assignment data found for id : ' . $reviewAssignmentId;
                 }
             }
         }
     } else {
         $response['success'] = false;
-        $response['data'] = "Invalid request method.";
+        $response['message'] = "Invalid request method.";
     }
 } catch (Exception $e) {
     throw new Exception($e->getMessage());

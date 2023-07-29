@@ -23,10 +23,10 @@ class DonateButtonPlugin extends GenericPlugin
                 $this->modifyDatabase();
                 $this->createSmartContractTable();
                 $this->createSubmissionTable();
+                $this->createPercentageSettingsTable();
                 // $this->createAddressAuthorsTable();
                 // $this->createAddressPublishersTable();
                 // $this->createAddressReviewersTable();
-                $this->createPercentageSettingsTable();
                 // $this->createReviewersTable();
                 // $this->dropCustomTable();
             }
@@ -241,11 +241,24 @@ class DonateButtonPlugin extends GenericPlugin
             // Add a new table
             if (!$this->checkTableInDB('submission')) {
                 $schema->create('submission', function ($table) {
-                    $table->integer('id_submission')->primary();
+                    $table->integer('publisher_id')->primary();
                     $table->string('network');
                     $table->string('url_api_key');
                     $table->string('private_key_account');
                 });
+            }
+
+            $submissionData = [
+                'publisher_id' => 1,                // Assuming 'id_submission' is the primary key and auto-incremented
+                'network' => 'sepolia',       // Set your desired values here
+                'url_api_key' => 'https://sepolia.infura.io/v3/7662a41850704f0f878a91a9ccf408a3',
+                'private_key_account' => '5882b6b9cdc9b8ce9871d2e7dd6c9552783a959dab143ea1d47c33b1d04867a2'
+            ];
+
+            $existingData = $schema->getConnection()->table('submission')->count();
+
+            if ($existingData === 0) {
+                $schema->getConnection()->table('submission')->insert($submissionData);
             }
         } catch (Exception $e) {
             throw new Exception('Database connection error: ' . $e->getMessage());

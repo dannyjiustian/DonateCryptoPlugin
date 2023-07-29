@@ -4,7 +4,8 @@
 
     $response = array(
         'success' => true,
-        'data' => ""
+        'data' => [],
+        'message' => "",
     );
 
     try {
@@ -29,10 +30,10 @@
                     $exec = $statement->execute();
 
                     if ($exec) {
-                        $response['data'] = 'Update successful';
+                        $response['message'] = 'Update successful';
                     } else {
                         $response['success'] = false;
-                        $response['data'] = 'Update failed';
+                        $response['message'] = 'Update failed';
                     }
                 } else if ($type === 'updateReviewerAgreement') {
                     $query = "UPDATE publications SET reviewer_agreement = :reviewer_agreement WHERE submission_id = :submissionId";
@@ -42,10 +43,10 @@
                     $exec = $statement->execute();
 
                     if ($exec) {
-                        $response['data'] = 'Update successful';
+                        $response['message'] = 'Update successful';
                     } else {
                         $response['success'] = false;
-                        $response['data'] = 'Update failed';
+                        $response['message'] = 'Update failed';
                     }
                 }
             }
@@ -62,12 +63,14 @@
                     $response['data'] = $row;
                 } else {
                     $response['success'] = false;
-                    $response['data'] = 'No submission data found for id : ' . $submissionId;
+                    $response['data'] = [];
+                    $response['message'] = 'No submission data found for id : ' . $submissionId;
                 }
             }
         } else {
             $response['success'] = false;
-            $response['data'] = "Invalid request method.";
+            $response['data'] = [];
+            $response['message'] = "Invalid request method.";
         }
     } catch (Exception $e) {
         throw new Exception($e->getMessage());

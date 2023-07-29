@@ -4,7 +4,8 @@ require_once '../database/Database.inc.php';
 
 $response = array(
     'success' => true,
-    'data' => ""
+    'data' => [],
+    'message' => "",
 );
 
 try {
@@ -28,10 +29,10 @@ try {
             $exec = $statement->execute();
 
             if ($exec) {
-                $response['data'] = 'Update successful';
+                $response['message'] = 'Update successful';
             } else {
                 $response['success'] = false;
-                $response['data'] = 'Update failed';
+                $response['message'] = 'Update failed';
             }
         }
     } else if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -49,7 +50,8 @@ try {
                 $response['data'] = $row;
             } else {
                 $response['success'] = false;
-                $response['data'] = 'No user found for username : ' . $username;
+                $response['message'] = 'No user found for username : ' . $username;
+                $response['data'] = [];
             }
         }
 
@@ -64,12 +66,13 @@ try {
                 $response['data'] = $row;
             } else {
                 $response['success'] = false;
-                $response['data'] = 'No user found for username : ' . $username;
+                $response['data'] = [];
+                $response['message'] = 'No user found for username : ' . $username;
             }
         }
     } else {
         $response['success'] = false;
-        $response['data'] = "Invalid request method.";
+        $response['message'] = "Invalid request method.";
     }
 } catch (Exception $e) {
     throw new Exception($e->getMessage());

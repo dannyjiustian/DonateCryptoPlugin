@@ -4,7 +4,8 @@ require_once '../database/Database.inc.php';
 
 $response = array(
     'success' => true,
-    'data' => ""
+    'data' => [],
+    'message' => "",
 );
 
 try {
@@ -24,12 +25,14 @@ try {
                 $response['data'] = $row;
             } else {
                 $response['success'] = false;
+                $response['data'] = [];
                 $response['message'] = 'No publication data found for id : ' . $publication_id;
             }
         }
     } else {
         $response['success'] = false;
-        $response['data'] = "Invalid request method.";
+        $response['data'] = [];
+        $response['message'] = "Invalid request method.";
     }
 } catch (Exception $e) {
     throw new Exception($e->getMessage());

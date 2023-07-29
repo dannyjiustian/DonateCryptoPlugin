@@ -34,7 +34,8 @@ try {
         if ($author_agreement == 1 && $reviewer_agreement == 1 && $publisher_agreement == 1) {
 
           // Fetch submission data
-          $getSubmission = "SELECT * FROM submission WHERE publisher_id = :publisher_id";
+          // $getSubmission = "SELECT * FROM submission WHERE publisher_id = :publisher_id";
+          $getSubmission = "SELECT * FROM submission WHERE publisher_id = 1";
           $stmt = $pdo->prepare($getSubmission);
           $stmt->execute(['publisher_id' => $publisher_id]);
           $execGetSubmission = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -89,7 +90,8 @@ try {
           } else {
             $response['status'] = false;
             $response['message'] = 'Failure to create smart contract';
-            $response['data'] = "id submission not found! ID: $id_submission";
+            $response['detail'] = "id submission not found! ID: $id_submission";
+            $response['data'] = [];
           }
         } else {
           $response['status'] = false;
@@ -116,7 +118,8 @@ try {
       } else {
         $response['status'] = false;
         $response['message'] = 'Failure to get ABI data';
-        $response['data'] = "id submission not found! ID: $id_submission";
+        $response['data'] = [];
+        $response['detail'] = "id submission not found! ID: $id_submission";
       }
     } else if (isset($type) && $type === "getDataDatabase") {
       $id_submission = $_GET['id_submission'];
@@ -183,7 +186,8 @@ try {
       } else {
         $response['status'] = false;
         $response['message'] = 'Failure to get ABI data';
-        $response['data'] = "id submission not found! ID: $id_submission";
+        $response['detail'] = "id submission not found! ID: $id_submission";
+        $response['data'] = [];
       }
     } else {
       $response['status'] = false;
@@ -198,7 +202,7 @@ try {
 } catch (Exception $e) {
   $response['status'] = false;
   $response['message'] = "Invalid request method.";
-  $response['data'] = $e->getMessage();
+  $response['detail'] = $e->getMessage();
   http_response_code(500);
 }
 

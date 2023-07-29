@@ -4,7 +4,8 @@ require_once '../database/Database.inc.php';
 
 $response = array(
     'success' => true,
-    'data' => ""
+    'data' => [],
+    'message' => "",
 );
 
 try {
@@ -29,10 +30,10 @@ try {
 
             if ($exec) {
                 $response['success'] = true;
-                $response['data'] = 'Update successful';
+                $response['message'] = 'Update successful';
             } else {
                 $response['success'] = false;
-                $response['data'] = 'Update failed';
+                $response['message'] = 'Update failed';
             }
         }
         if ($author_id == null) {
@@ -45,10 +46,10 @@ try {
 
             if ($exec) {
                 $response['success'] = true;
-                $response['data'] = 'Update successful in update';
+                $response['message'] = 'Update successful in update';
             } else {
                 $response['success'] = false;
-                $response['data'] = 'Update failed';
+                $response['message'] = 'Update failed';
             }
         }
 
@@ -66,18 +67,19 @@ try {
                 $response['data'] = $row;
             } else {
                 $response['success'] = false;
+                $response['data'] = [];
                 $response['message'] = 'No author data found for id : ' . $author_id;
             }
         }
     } else {
         $response['success'] = false;
-        $response['data'] = "Invalid request method.";
+        $response['message'] = "Invalid request method.";
         http_response_code(500);
     }
 } catch (Exception $e) {
     $response['status'] = false;
     $response['message'] = "Invalid request method.";
-    $response['data'] = $e->getMessage();
+    $response['detail'] = $e->getMessage();
     throw new Exception($e->getMessage());
     http_response_code(500);
 }

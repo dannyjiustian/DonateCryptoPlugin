@@ -8,22 +8,32 @@
     }
 
     let url = window.location.href;
+
     function getServerFromUrl(url) {
         var parser = document.createElement('a');
         parser.href = url;
         var protocol = parser.protocol;
         var server = parser.hostname;
-        var result = protocol + '//' + server;
+        var port = parser.port;
+        if (port) {
+            var result = protocol + '//' + server + ":" + port;
+        } else {
+            var result = protocol + '//' + server;
+        }
         return result;
     }
 
     function getUrlBeforeIndexPhp(url) {
-        var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
-        var matches = url.match(regex);
-        if (matches && matches.length > 1) {
-            return matches[1];
+        if (url.includes("/index.php")) {
+            var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+            var matches = url.match(regex);
+            if (matches && matches.length > 1) {
+                return matches[1];
+            }
+        } else {
+            // For other cases, return the whole URL
+            return "";
         }
-        return url;
     }
 
     var server = getServerFromUrl(url);

@@ -28,7 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
             parser.href = url;
             var protocol = parser.protocol;
             var server = parser.hostname;
-            var result = protocol + '//' + server;
+            var port = parser.port;
+            if (port) {
+                var result = protocol + '//' + server + ":" + port;
+            } else {
+                var result = protocol + '//' + server;
+            }
             return result;
         }
 
@@ -41,14 +46,26 @@ document.addEventListener('DOMContentLoaded', function () {
         * @returns 
         */
         function getUrlBeforeIndexPhp(url) {
-            var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
-            var matches = url.match(regex);
-            if (matches && matches.length > 1) {
-                return matches[1];
+            if (url.includes("/index.php")) {
+                var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+                var matches = url.match(regex);
+                if (matches && matches.length > 1) {
+                    return matches[1];
+                }
+            } else {
+                // For other cases, return the whole URL
+                return "";
             }
-            return url;
         }
 
+        // function getUrlBeforeIndexPhp(url) {
+        //     var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+        //     var matches = url.match(regex);
+        //     if (matches && matches.length > 1) {
+        //         return matches[1];
+        //     }
+        //     return url;
+        // }
 
         // Function to create a toast notification
         const createToast = (type, title, message, color) => {
@@ -116,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
+                        // console.log(data)
                         if (data.success) {
                             createToast("success", "Success", "Settings saved", "#00b09b");
                         }
@@ -135,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await fetch(server + path + '/plugins/generic/DonateButtonPlugin/request/reviewers.php?type=getReviewerRole')
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
+                        // console.log(data)
                         reviewersData = data.data
                     })
                     .catch(error => {
@@ -349,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (data.data.length > 0) {
                             wallet_address = data.data[0].wallet_address
                             percentage_settings.publisher_id = data.data[0].user_id
-                            console.log(percentage_settings.publisher_id)
+                            // console.log(percentage_settings.publisher_id)
                             $("#publisher_wallet").val(wallet_address);
                             getPercentageSettings();
                         }

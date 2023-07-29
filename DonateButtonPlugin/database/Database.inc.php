@@ -15,7 +15,7 @@ class Database
             $dbPass = $config['password'];
             $dbName = $config['name'];
         } else {
-            echo "No OJS Configuration found.";
+            echo "OJS configuration file not found.";
         }
 
         $dsn = 'mysql:host=' . $dbHost . ';dbname=' . $dbName;

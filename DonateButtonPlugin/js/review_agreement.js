@@ -28,7 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
             parser.href = url;
             var protocol = parser.protocol;
             var server = parser.hostname;
-            var result = protocol + '//' + server;
+            var port = parser.port;
+            if (port) {
+                var result = protocol + '//' + server + ":" + port;
+            } else {
+                var result = protocol + '//' + server;
+            }
             return result;
         }
 
@@ -41,12 +46,16 @@ document.addEventListener('DOMContentLoaded', function () {
         * @returns 
         */
         function getUrlBeforeIndexPhp(url) {
-            var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
-            var matches = url.match(regex);
-            if (matches && matches.length > 1) {
-                return matches[1];
+            if (url.includes("/index.php")) {
+                var regex = /^(?:https?:\/\/[^/]+)?(.*?)(?=\/?index\.php)/;
+                var matches = url.match(regex);
+                if (matches && matches.length > 1) {
+                    return matches[1];
+                }
+            } else {
+                // For other cases, return the whole URL
+                return "";
             }
-            return url;
         }
 
         // Function to create a toast notification
