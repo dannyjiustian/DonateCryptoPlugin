@@ -1,19 +1,18 @@
+# Plugin Donate Crypto (Especially Ethereum) for OJS System [Beta Version]
 
-# Plugin Donate Crypto(Especially Etherium) for OJS system [Beta Version]
+This plugin allows users to donate Ethereum cryptocurrency within the OJS system. It facilitates splitting the donated amount from the sender among three recipients **(publisher, reviewer, and author)**. Follow the steps below to install this plugin in your OJS system.
 
-This plugin has a function to donate Ethereum crypto in the OJS system, this plugin will split the amount from the sender to 3 recipients **(publisher, reviewer, and author)** and then this plugin needs to be installed in the OJS system, following the steps below for installation.
-
-**PS: This plugin is under development**
+**PS: This plugin is currently under development.**
 
 
 ## Installation
 
-Download or Clone this repository. After that you copy folder **DonateButtonPlugin** and move to your OJS folder.
+1. Download or Clone this repository.
+2. Copy the folder **DonateButtonPlugin** and move it to your OJS folder.
 
-    
 ## Examples
 
-Examples your use **XAMPP/MAMP**, go to the htdocs/[ojs-folder-name] folder.
+For users of **XAMPP/MAMP**, navigate to the htdocs/[ojs-folder-name] folder.
 
 ```bash
 .
@@ -21,47 +20,70 @@ Examples your use **XAMPP/MAMP**, go to the htdocs/[ojs-folder-name] folder.
 │   ├── [ojs-folder-name]
 │   │   ├── plugins
 │   │   │   ├── generic
-│   │   │   │   ├── Paste here the "DonateButtonPlugin" folder.
+│   │   │   │   ├── Paste the "DonateButtonPlugin" folder here.
 │   │   │   │   │   
 │   │   │   │   │   
 │   │   │   │   │   
-│   │   │   │   └── Other Folder for Plugins Generic
+│   │   │   │   └── Other Folder for Generic Plugins
 │   │   │   └── Other Folder for Plugins
 │   │   └── Other Folder System OJS
 │   └── Other Folder Project
 └── Other Folder System XAMPP/MAMP
 ```
 
+## Enable the Plugin
 
+After installing the plugin, don't forget to enable it by following these steps:
 
-## Enabled the Plugin
+- Log in to the OJS system with administrator privileges.
 
-After installing the plugin, don't forget to enabled the plugin, follow the steps below to enabled the plugin.
-
-- Log in to the OJS system and login with the administrator level.
-
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/6a5e651d-b4b4-453e-b154-056f0a7678eb)
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/6a5e651d-b4b4-453e-b154-056f0a7678eb)
 
 - Once logged in, go to your profile and click on the **Dashboard** menu.
 
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/c5b84267-155d-4b39-9436-7f3c11a74673)
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/c5b84267-155d-4b39-9436-7f3c11a74673)
 
-- And then go to menu **Website > Plugins**.
+- Then, navigate to **Website > Plugins**.
 
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/01d95d23-c2aa-44d0-84e9-b88704df854c)
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/01d95d23-c2aa-44d0-84e9-b88704df854c)
 
-- In Installed Plugins, search for the plugin name **"Donation Button Plugin "** and check the checkbox for activated plugins.
+- In the Installed Plugins section, search for the plugin named **"Donation Button Plugin"** and check the checkbox to activate it.
+
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/f3f3961a-4871-49bd-9688-b32e7312ce43)
+
+- Once the plugin is enabled, you will see the Donate Button on the Journal Page.
+
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/315f629c-2cc8-479b-91bf-a9eb9128f391)
   
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/f3f3961a-4871-49bd-9688-b32e7312ce43)
-
-- After enabled the plugin you can see the Donate Button in Journal Page.
-
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/315f629c-2cc8-479b-91bf-a9eb9128f391)
-  
-    ![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/d4e992ac-5013-4103-a219-9aaee409d327)
-
-
+![App Screenshot](https://github.com/dannyjiustian/DonateCryptoPlugin/assets/26474898/d4e992ac-5013-4103-a219-9aaee409d327)
 
 ## Tech Stack
 
-**System:** ReactJS, TailwindCSS, Javascript, Smarty File (.tpl), PHP
+**System:** ReactJS, TailwindCSS, JavaScript, Smarty File (.tpl), PHP
+
+## Build using Docker Compose
+
+After downloading the project, change directory into the `DonateCryptoPlugin` directory by executing the following command on your console.
+```
+cd DonateCryptoPlugin
+```
+
+####  download and build the (required) containers
+```
+sudo docker-compose build
+```
+
+####  run the containers
+```
+sudo docker-compose up
+```
+
+####  stop the containers
+```
+sudo docker-compose stop
+```
+
+#### Remove permanently the containers
+```
+sudo docker-compose rm
+```
