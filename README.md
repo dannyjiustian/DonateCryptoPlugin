@@ -1,3 +1,4 @@
+# This repository move to https://github.com/confennitech/DonateCryptoPlugin
 # Plugin Donate Crypto (Especially Ethereum) for OJS System [Beta Version]
 
 This plugin allows users to donate Ethereum cryptocurrency within the OJS system. It facilitates splitting the donated amount from the sender among three recipients **(publisher, reviewer, and author)**. Follow the steps below to install this plugin in your OJS system.
